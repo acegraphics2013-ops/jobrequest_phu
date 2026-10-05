@@ -1,0 +1,146 @@
+[
+  {
+    "id": 1,
+    "category": "getting_started",
+    "question": "What is the Job Request System?",
+    "answer": "The Job Request System is an online platform used by ASTMMC staff and departments to submit, review, approve, monitor, and manage requests for Health Promotion Unit (HPU) services, graphic designs, videos, photo coverage, and IEC materials.",
+    "keywords": ["system", "overview", "what is", "about", "hpu", "workbench", "platform", "purpose", "astmmc"],
+    "suggested": true
+  },
+  {
+    "id": 2,
+    "category": "getting_started",
+    "question": "Who can submit job requests?",
+    "answer": "All authorized personnel, medical staff, section heads, and hospital department representatives registered in the ASTMMC system can submit job requests to HPU.",
+    "keywords": ["who can", "roles", "authorized", "staff", "departments", "users", "access"],
+    "suggested": false
+  },
+  {
+    "id": 3,
+    "category": "getting_started",
+    "question": "What services does the Health Promotion Unit (HPU) provide?",
+    "answer": "HPU provides Graphic Design (tarpaulins, posters, certificates, pubmats), Video Production (AVPs, teasers, instructional videos), Photo/Video Coverage for hospital events, IEC Materials (flyers, brochures), and Ward Health Education support.",
+    "keywords": ["services", "hpu services", "graphic design", "video production", "coverage", "iec materials", "tarpaulin", "poster", "avp"],
+    "suggested": true
+  },
+  {
+    "id": 4,
+    "category": "submitting_requests",
+    "question": "How do I submit a job request?",
+    "answer": "After logging in, go to 'Job Requests' or 'My Requests', click '+ New Request', select your request type (Graphic Design, Video, Coverage, IEC), fill in project details, event date, objective, attach sample files, and submit.",
+    "keywords": ["submit", "create", "new request", "file", "how to", "make", "send"],
+    "suggested": true
+  },
+  {
+    "id": 5,
+    "category": "submitting_requests",
+    "question": "How far in advance should I submit an event coverage request?",
+    "answer": "It is recommended to submit photo/video coverage requests at least 3 to 5 working days prior to the event date to ensure staff availability and equipment reservation.",
+    "keywords": ["advance", "days", "event coverage", "lead time", "deadline", "when to submit"],
+    "suggested": false
+  },
+  {
+    "id": 6,
+    "category": "tracking",
+    "question": "How can I track my request status?",
+    "answer": "Sign in to your account and open 'My Requests'. Each request displays real-time approval status badges (Pending Review, Under Review, Approved, In Development, For Revision, Completed). Click a request to view detailed remarks and progress.",
+    "keywords": ["track", "status", "check", "monitor", "where is", "progress", "view", "find"],
+    "suggested": true
+  },
+  {
+    "id": 7,
+    "category": "tracking",
+    "question": "How will I know when my request is completed?",
+    "answer": "When your request status changes to 'Completed', you will receive an in-app notification and email. You can download the completed files directly from 'My Requests'.",
+    "keywords": ["completed", "finished", "done", "download", "ready", "notification"],
+    "suggested": false
+  },
+  {
+    "id": 8,
+    "category": "status_workflow",
+    "question": "What does Pending Review mean?",
+    "answer": "'Pending Review' means your request was successfully received by the system and is waiting for initial evaluation by the HPU Supervisor or Administrator.",
+    "keywords": ["pending review", "pending", "review", "meaning", "status"],
+    "suggested": false
+  },
+  {
+    "id": 9,
+    "category": "status_workflow",
+    "question": "What does Under Review mean?",
+    "answer": "'Under Review' means the HPU Supervisor is currently assessing your request requirements, checking staff availability, and determining project feasibility.",
+    "keywords": ["under review", "assessing", "evaluation", "status meaning"],
+    "suggested": false
+  },
+  {
+    "id": 10,
+    "category": "status_workflow",
+    "question": "What does In Development mean?",
+    "answer": "'In Development' means your request has been approved by the supervisor and assigned HPU layout artists or videographers are actively creating your requested output.",
+    "keywords": ["in development", "development", "working", "assigned", "in progress", "status"],
+    "suggested": false
+  },
+  {
+    "id": 11,
+    "category": "status_workflow",
+    "question": "What does Disapproved mean?",
+    "answer": "'Disapproved' means the request could not be processed due to schedule conflict, incomplete requirements, or non-compliance with institutional policies. Reason is provided in the remarks.",
+    "keywords": ["disapproved", "rejected", "declined", "status meaning", "reason"],
+    "suggested": false
+  },
+  {
+    "id": 12,
+    "category": "status_workflow",
+    "question": "Who approves job requests?",
+    "answer": "Submitted job requests are evaluated and approved by designated HPU Supervisors, Unit Heads, or System Administrators according to hospital guidelines.",
+    "keywords": ["approves", "approval", "who approves", "supervisor", "admin", "sign off"],
+    "suggested": true
+  },
+  {
+    "id": 13,
+    "category": "revisions_attachments",
+    "question": "What should I do if my request is For Revision?",
+    "answer": "Open the request in 'My Requests' and check the supervisor remarks. Click 'Edit Request', update the missing details or upload requested reference files, then resubmit for re-evaluation.",
+    "keywords": ["for revision", "revision", "revise", "change", "correction", "edit", "resubmit", "remarks"],
+    "suggested": true
+  },
+  {
+    "id": 14,
+    "category": "revisions_attachments",
+    "question": "Can I attach reference files or images?",
+    "answer": "Yes! You can attach logos, draft text, guidelines, reference photos, and sample layout designs in JPG, PNG, GIF, WEBP, PDF, DOCX, or ZIP format up to 10 MB per file.",
+    "keywords": ["attach", "files", "upload", "photo", "document", "logo", "reference", "attachment", "image", "picture", "pdf"],
+    "suggested": true
+  },
+  {
+    "id": 15,
+    "category": "kanban_board",
+    "question": "What is the Kanban Board and how do I use it?",
+    "answer": "The Kanban Board provides a visual card workflow organized into columns (Pending, Under Review, Approved, In Development, For Revision, Completed). Authorized HPU staff can drag & drop cards to update request progress.",
+    "keywords": ["kanban", "board", "columns", "drag and drop", "cards", "workflow", "visual"],
+    "suggested": false
+  },
+  {
+    "id": 16,
+    "category": "account_access",
+    "question": "What if I forgot my password or cannot log in?",
+    "answer": "Click 'Need Account Help?' on the login page to send an official password reset or account recovery inquiry directly to the System Administrator.",
+    "keywords": ["forgot password", "reset password", "login help", "cannot login", "locked out", "inactive", "signin"],
+    "suggested": true
+  },
+  {
+    "id": 17,
+    "category": "account_access",
+    "question": "How do I request a new user account?",
+    "answer": "Click 'Request Account' on the login page, fill out your full name, official email address, department, and desired role, then submit for administrator verification and approval.",
+    "keywords": ["request account", "register", "sign up", "create account", "new user", "access"],
+    "suggested": false
+  },
+  {
+    "id": 18,
+    "category": "technical_support",
+    "question": "What should I do if attachment upload fails?",
+    "answer": "Ensure your file size is under 10 MB and in an allowed format (JPG, PNG, GIF, WEBP, PDF, DOCX, ZIP). If it still fails, try compressing the file or clear your browser cache.",
+    "keywords": ["attachment upload failed", "upload error", "file size error", "failed", "cannot upload"],
+    "suggested": false
+  }
+]

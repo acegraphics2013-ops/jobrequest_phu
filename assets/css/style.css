@@ -1,0 +1,220 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
+@import url("ui-kit.css");
+@import url("sidebar_addon.css");
+
+:root {
+    --sidebar-width: 220px;
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --primary-light: #eff6ff;
+    --dark: #0f172a;
+    --muted: #64748b;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --background: #f8fafc;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.03);
+    --shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 20px 32px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { 
+    box-sizing: border-box; 
+}
+
+html, body { 
+    min-height: 100%; 
+}
+
+body {
+    margin: 0;
+    overflow-x: hidden;
+    background: var(--background);
+    color: var(--dark);
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.app-shell { 
+    min-height: 100vh; 
+}
+
+
+/* ============================================================
+   MAIN CONTENT SHELL & LAYOUT
+   ============================================================ */
+.main-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 24px 32px 40px;
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================
+   PREMIUM MODERN CARDS & PANELS
+   ============================================================ */
+.card, .panel, .service-card, .availability-panel {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg) !important;
+    background: #ffffff !important;
+    box-shadow: var(--shadow-md) !important;
+    transition: var(--transition) !important;
+    overflow: hidden;
+}
+
+.card:hover, .panel:hover {
+    box-shadow: var(--shadow-lg) !important;
+}
+
+.card-header {
+    background: transparent !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 16px 22px !important;
+}
+
+.card-title {
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: var(--dark) !important;
+    letter-spacing: -0.01em !important;
+}
+
+.card-body {
+    padding: 22px !important;
+}
+
+/* ============================================================
+   MODERN FORM INPUTS & BUTTONS
+   ============================================================ */
+.form-control, .form-select {
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--border) !important;
+    padding: 10px 14px !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    color: var(--dark) !important;
+    transition: var(--transition) !important;
+    background-color: #ffffff !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12) !important;
+    outline: none !important;
+}
+
+.btn {
+    border-radius: var(--radius-md) !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    padding: 9px 18px !important;
+    transition: var(--transition) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    cursor: pointer !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3) !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45) !important;
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+}
+
+.btn-outline-primary {
+    border: 1px solid #3b82f6 !important;
+    color: #2563eb !important;
+    background: #ffffff !important;
+}
+
+.btn-outline-primary:hover {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ============================================================
+   VIBRANT BADGES & PILLS
+   ============================================================ */
+.badge {
+    padding: 6px 12px !important;
+    border-radius: 9999px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.03em !important;
+    text-transform: uppercase !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+.bg-primary { background-color: #3b82f6 !important; color: #fff !important; }
+.bg-success { background-color: #10b981 !important; color: #fff !important; }
+.bg-warning { background-color: #f59e0b !important; color: #fff !important; }
+.bg-danger  { background-color: #ef4444 !important; color: #fff !important; }
+.bg-info    { background-color: #06b6d4 !important; color: #fff !important; }
+
+/* Status pill enhancements */
+.badge-status-pending { background: #fffbeb !important; color: #b45309 !important; border: 1px solid #fde68a !important; }
+.badge-status-approved { background: #ecfdf5 !important; color: #047857 !important; border: 1px solid #a7f3d0 !important; }
+.badge-status-review { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
+.badge-status-disapproved { background: #fef2f2 !important; color: #b91c1c !important; border: 1px solid #fecaca !important; }
+
+/* ============================================================
+   TABLES & DATAGRIDS
+   ============================================================ */
+.table-responsive {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: #fff;
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0 !important;
+    font-size: 13.5px !important;
+}
+
+.table th {
+    background: #f8fafc !important;
+    color: var(--muted) !important;
+    font-weight: 800 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 14px 18px !important;
+}
+
+.table td {
+    padding: 14px 18px !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    color: var(--dark) !important;
+    transition: var(--transition) !important;
+}
+
+.table tr:hover td {
+    background-color: #f8fafc !important;
+}

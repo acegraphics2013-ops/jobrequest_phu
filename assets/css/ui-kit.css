@@ -1,0 +1,155 @@
+/* ============================================================
+   HPU WORKBENCH — SHARED UI KIT (STATE OF THE ART DESIGN)
+   ============================================================ */
+
+:root {
+    --ui-kit-border: #e2e8f0;
+    --ui-kit-border-soft: #f1f5f9;
+    --ui-kit-muted: #64748b;
+    --ui-kit-ink: #0f172a;
+    --ui-kit-primary: #2563eb;
+    --ui-kit-radius: 16px;
+    --ui-kit-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 4px 10px -2px rgba(15, 23, 42, 0.02);
+}
+
+/* ---------- Cross-browser Reset & Normalization ---------- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Prevent auto-zooming on mobile webkit inputs */
+@media (max-width: 767px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Cross-browser Scrollbars */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.3);
+    border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.5);
+}
+
+/* ---------- Page container ---------- */
+.blocked-page, .ui-page {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* ---------- KPI Grid & Cards ---------- */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 1100px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kpi-card, .panel, .service-card, .availability-panel {
+    border: 1px solid var(--ui-kit-border) !important;
+    border-radius: var(--ui-kit-radius) !important;
+    background: #ffffff !important;
+    box-shadow: var(--ui-kit-shadow) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.kpi-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px;
+    overflow: hidden;
+}
+
+.kpi-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.kpi-card:nth-child(1)::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.kpi-card:nth-child(2)::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+.kpi-card:nth-child(3)::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.kpi-card:nth-child(4)::before { background: linear-gradient(90deg, #10b981, #34d399); }
+.kpi-card:nth-child(5)::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.kpi-card:nth-child(6)::before { background: linear-gradient(90deg, #06b6d4, #67e8f9); }
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px -4px rgba(15, 23, 42, 0.1) !important;
+}
+
+.kpi-card .kpi-icon {
+    width: 46px; 
+    height: 46px; 
+    flex: 0 0 46px;
+    display: grid; 
+    place-items: center;
+    border-radius: 14px; 
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.kpi-card:nth-child(1) .kpi-icon { background: #eff6ff; color: #1d4ed8; }
+.kpi-card:nth-child(2) .kpi-icon { background: #fef2f2; color: #b91c1c; }
+.kpi-card:nth-child(3) .kpi-icon { background: #fffbeb; color: #b45309; }
+.kpi-card:nth-child(4) .kpi-icon { background: #ecfdf5; color: #047857; }
+.kpi-card:nth-child(5) .kpi-icon { background: #f5f3ff; color: #6d28d9; }
+.kpi-card:nth-child(6) .kpi-icon { background: #ecfeff; color: #0e7490; }
+
+.kpi-card .kpi-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--ui-kit-ink);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+}
+
+.kpi-card .kpi-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ui-kit-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+}

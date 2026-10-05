@@ -1,0 +1,9 @@
+Options -Indexes -ExecCGI
+RemoveHandler .php .phtml .phar .cgi .pl .py .sh
+RemoveType .php .phtml .phar .cgi .pl .py .sh
+<FilesMatch "\.(php|phtml|phar|cgi|pl|py|sh|php5|php7|phps|pht|shtml|htaccess)$">
+    Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

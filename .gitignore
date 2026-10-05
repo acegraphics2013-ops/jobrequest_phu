@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+vendor/
+**/node_modules/
+**/vendor/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+frontend/.env
+frontend/.env.*
+
+# Build outputs
+.next/
+**/.next/
+out/
+build/
+dist/
+**/target/
+
+# System / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Storage & Uploads log/cache
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+!storage/logs/.gitkeep
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/views/.gitkeep
+
+# Database backups (sensitive)
+storage/backups/*
+!storage/backups/.htaccess
+*.sql.gz
+
+# User-uploaded content (keep folder placeholders)
+uploads/**/*.*
+!uploads/**/.htaccess
+!uploads/.gitkeep
+storage/iec_materials/*
+!storage/iec_materials/.htaccess
+storage/publication_submissions/**/*.*
+!storage/publication_submissions/**/.htaccess
+storage/ward_health_education/*
+!storage/ward_health_education/.htaccess
+
+# Package manager logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -1,0 +1,1028 @@
+/* ==========================================================================
+   PHU WORKBENCH - GLOBAL MESSENGER-STYLE FLOATING CHAT ADD-ON
+   ========================================================================== */
+
+#phu-floating-chat-container {
+    position: fixed;
+    z-index: 9990;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #0f172a;
+    box-sizing: border-box;
+}
+
+#phu-floating-chat-container * {
+    box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   1. FLOATING CHAT HEAD (MINIMIZED LAUNCHER)
+   -------------------------------------------------------------------------- */
+.phu-chat-head {
+    position: fixed;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    z-index: 9992;
+}
+
+.phu-chat-head:hover {
+    transform: scale(1.06);
+    box-shadow: 0 14px 28px -4px rgba(37, 99, 235, 0.5), 0 10px 12px -5px rgba(0, 0, 0, 0.15);
+}
+
+.phu-chat-head:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+}
+
+.phu-chat-head-icon {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* User Floating Chat Heads */
+.phu-user-chat-head {
+    position: fixed;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    color: #1e40af;
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    z-index: 9991;
+    border: 2px solid #2563eb;
+    overflow: visible;
+}
+
+.phu-user-chat-head img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.phu-user-chat-head:hover {
+    transform: scale(1.08);
+    box-shadow: 0 14px 28px -4px rgba(37, 99, 235, 0.4);
+}
+
+.phu-user-chat-head .user-head-label {
+    position: absolute;
+    right: 66px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #0f172a;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.phu-user-chat-head:hover .user-head-label {
+    opacity: 1;
+}
+
+/* Unread Badge (Top-Right) */
+.phu-chat-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background-color: #ef4444;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    line-height: 1;
+}
+
+/* Lock Badge (Bottom-Right) */
+.phu-chat-lock-badge {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    background-color: #0f172a;
+    color: #f59e0b;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.phu-chat-lock-badge svg {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+}
+
+/* --------------------------------------------------------------------------
+   2. EXPANDED CHAT WINDOW
+   -------------------------------------------------------------------------- */
+.phu-chat-window {
+    position: fixed;
+    width: 650px;
+    height: 520px;
+    min-width: 360px;
+    min-height: 420px;
+    max-width: 90vw;
+    max-height: 85vh;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.25), 0 0 1px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 9995;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.phu-chat-window.hidden {
+    display: none !important;
+}
+
+/* Window Header */
+.phu-chat-header {
+    height: 48px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0 12px 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    flex-shrink: 0;
+}
+
+.phu-chat-header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0f172a;
+}
+
+.phu-chat-header-title .brand-icon {
+    width: 22px;
+    height: 22px;
+    color: #2563eb;
+}
+
+.phu-chat-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.phu-chat-action-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.phu-chat-action-btn:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+.phu-chat-action-btn.btn-lock:hover {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.phu-chat-action-btn.btn-close:hover {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.phu-chat-action-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Body Container (Grid Layout) */
+.phu-chat-body {
+    display: flex;
+    flex: 1;
+    height: calc(100% - 48px);
+    overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   3. SIDEBAR (CONVERSATIONS LIST)
+   -------------------------------------------------------------------------- */
+.phu-chat-sidebar {
+    width: 240px;
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.phu-chat-search-wrap {
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.phu-chat-search-input {
+    width: 100%;
+    padding: 6px 10px 6px 30px;
+    font-size: 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background-color: #f8fafc;
+    color: #0f172a;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.phu-chat-search-input:focus {
+    border-color: #2563eb;
+    background-color: #ffffff;
+}
+
+.phu-chat-search-box {
+    position: relative;
+}
+
+.phu-chat-search-icon {
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.phu-chat-conv-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.phu-chat-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    padding: 8px 8px 4px 8px;
+}
+
+.phu-chat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    margin-bottom: 2px;
+    position: relative;
+}
+
+.phu-chat-item:hover {
+    background-color: #f1f5f9;
+}
+
+.phu-chat-item.active {
+    background-color: #eff6ff;
+    border-left: 3px solid #2563eb;
+}
+
+.phu-chat-avatar {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+    color: #334155;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.phu-chat-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.phu-chat-status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #94a3b8;
+    border: 2px solid #ffffff;
+}
+
+.phu-chat-status-dot.online {
+    background-color: #16a34a;
+}
+
+.phu-chat-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.phu-chat-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.phu-chat-item-preview {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+}
+
+.phu-chat-item-unread {
+    background-color: #ef4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --------------------------------------------------------------------------
+   4. MAIN CHAT PANEL (ACTIVE CONVERSATION)
+   -------------------------------------------------------------------------- */
+.phu-chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8fafc;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.phu-chat-topbar {
+    padding: 8px 14px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.phu-chat-topbar-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.phu-chat-topbar-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.phu-chat-topbar-status {
+    font-size: 11px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.phu-chat-topbar-status .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #94a3b8;
+}
+
+.phu-chat-topbar-status .dot.online {
+    background-color: #16a34a;
+}
+
+/* Idle Warning Banner */
+.phu-chat-idle-warning {
+    background-color: #fef3c7;
+    border-bottom: 1px solid #fde68a;
+    color: #92400e;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: fadeIn 0.2s ease;
+}
+
+.phu-chat-idle-warning svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* Messages Scroll Container */
+.phu-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.phu-chat-msg-group {
+    display: flex;
+    flex-direction: column;
+    max-width: 65%;
+}
+
+@media (max-width: 768px) {
+    .phu-chat-msg-group {
+        max-width: 82%;
+    }
+}
+
+.phu-chat-new-msgs-btn {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    cursor: pointer;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    animation: fadeIn 0.15s ease;
+}
+
+.phu-chat-new-msgs-btn:hover {
+    background: #1d4ed8;
+}
+
+.phu-chat-reconnecting-banner {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    text-align: center;
+    border-bottom: 1px solid #fca5a5;
+}
+
+.phu-chat-msg-group.me {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.phu-chat-msg-group.other {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+.phu-chat-msg-sender {
+    font-size: 10px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 2px;
+    padding: 0 4px;
+}
+
+.phu-chat-bubble {
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    word-break: break-word;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.phu-chat-msg-group.me .phu-chat-bubble {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    border-bottom-right-radius: 2px;
+}
+
+.phu-chat-msg-group.other .phu-chat-bubble {
+    background-color: #ffffff;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 2px;
+}
+
+.phu-chat-msg-time {
+    font-size: 9.5px;
+    margin-top: 3px;
+    opacity: 0.75;
+    text-align: right;
+}
+
+.phu-chat-msg-group.other .phu-chat-msg-time {
+    color: #64748b;
+    text-align: left;
+}
+
+/* Quoted Reply Box */
+.phu-chat-reply-quote {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-left: 3px solid rgba(255,255,255,0.6);
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+    margin-bottom: 6px;
+}
+
+.phu-chat-msg-group.other .phu-chat-reply-quote {
+    border-left-color: #2563eb;
+    background: #f1f5f9;
+}
+
+/* Attachment View */
+.phu-chat-attachment {
+    margin-top: 6px;
+}
+
+.phu-chat-attachment-img {
+    max-width: 220px;
+    max-height: 180px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.1);
+    display: block;
+}
+
+.phu-chat-attachment-file {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: inherit;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.phu-chat-msg-group.other .phu-chat-attachment-file {
+    background: #f1f5f9;
+    color: #2563eb;
+}
+
+/* Reactions */
+.phu-chat-reactions {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+}
+
+.phu-chat-reaction-chip {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(0,0,0,0.1);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.phu-chat-msg-group.other .phu-chat-reaction-chip {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.phu-chat-reaction-chip.mine {
+    border-color: #2563eb;
+    font-weight: 700;
+}
+
+/* Quick Replies Chips */
+.phu-chat-quick-replies {
+    padding: 6px 10px;
+    background-color: #ffffff;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.phu-chat-quick-chip {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.phu-chat-quick-chip:hover {
+    background-color: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+/* Composer */
+.phu-chat-composer {
+    padding: 8px 10px;
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.phu-chat-attach-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.phu-chat-attach-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.phu-chat-textarea {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: #0f172a;
+    resize: none;
+    max-height: 80px;
+    min-height: 34px;
+    outline: none;
+    font-family: inherit;
+}
+
+.phu-chat-textarea:focus {
+    border-color: #2563eb;
+}
+
+.phu-chat-send-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: none;
+    background: #2563eb;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.phu-chat-send-btn:hover {
+    background: #1d4ed8;
+}
+
+.phu-chat-send-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+/* Attachment preview bar above composer */
+.phu-chat-attachment-bar {
+    padding: 6px 10px;
+    background-color: #eff6ff;
+    border-top: 1px solid #bfdbfe;
+    font-size: 11px;
+    color: #1e40af;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.phu-chat-attachment-cancel {
+    cursor: pointer;
+    color: #ef4444;
+    font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   5. LOCKED / RE-AUTH MODAL OVERLAY
+   -------------------------------------------------------------------------- */
+.phu-chat-lock-screen {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    color: #ffffff;
+    z-index: 10;
+}
+
+.phu-chat-lock-icon-lg {
+    width: 48px;
+    height: 48px;
+    color: #f59e0b;
+    margin-bottom: 12px;
+}
+
+.phu-chat-lock-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.phu-chat-lock-subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    max-width: 280px;
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.phu-chat-unlock-btn {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 8px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.phu-chat-unlock-btn:hover {
+    background-color: #1d4ed8;
+}
+
+.phu-chat-lock-input {
+    width: 240px;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 1px solid #475569;
+    background-color: #1e293b;
+    color: #ffffff;
+    outline: none;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.phu-chat-lock-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.4);
+}
+
+.phu-chat-lock-error {
+    color: #fca5a5;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   6. RESIZE HANDLE
+   -------------------------------------------------------------------------- */
+.phu-chat-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 14px;
+    height: 14px;
+    cursor: se-resize;
+    z-index: 9996;
+}
+
+.phu-chat-resize-handle::after {
+    content: "";
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid #94a3b8;
+    border-bottom: 2px solid #94a3b8;
+}
+
+/* --------------------------------------------------------------------------
+   7. MOBILE RESPONSIVE ADAPTATION
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .phu-chat-window {
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-width: 100vw !important;
+        max-height: 100dvh !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+    }
+
+    .phu-chat-body {
+        position: relative;
+    }
+
+    .phu-chat-sidebar {
+        width: 100%;
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        transition: transform 0.2s ease;
+    }
+
+    .phu-chat-main {
+        width: 100%;
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        transform: translateX(100%);
+        transition: transform 0.2s ease;
+    }
+
+    .phu-chat-window.mobile-chat-open .phu-chat-main {
+        transform: translateX(0);
+    }
+
+    .phu-chat-mobile-back {
+        display: flex !important;
+        align-items: center;
+        gap: 4px;
+        background: transparent;
+        border: none;
+        color: #2563eb;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 4px;
+        margin-right: 6px;
+    }
+}
+
+@media (min-width: 769px) {
+    .phu-chat-mobile-back {
+        display: none !important;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.phu-chat-empty-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 200px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    padding: 24px;
+}
+
+/* Incoming New Message Notification Toast */
+.phu-chat-new-msg-toast {
+    position: absolute;
+    top: 54px;
+    left: 12px;
+    right: 12px;
+    background-color: #0f172a;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 20;
+    animation: fadeIn 0.2s ease;
+    border: 1px solid #334155;
+}
+
+.phu-chat-new-msg-toast-btn {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.phu-chat-new-msg-toast-btn:hover {
+    background-color: #1d4ed8;
+}
+

@@ -1,0 +1,21 @@
+{
+  "name": "jobrequest_phu",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "app": "electron .",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.1",
+    "electron": "^44.5.1"
+  }
+}

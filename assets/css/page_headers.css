@@ -1,0 +1,261 @@
+/* ============================================================
+   HPU WORKBENCH - ULTRA-PREMIUM PAGE & SECTION HEADER SYSTEM
+   State-of-the-Art Visual Language for Page Headers & Navigation
+   ============================================================ */
+
+:root {
+    --ph-primary: #2563eb;
+    --ph-primary-dark: #1d4ed8;
+    --ph-primary-soft: #eff6ff;
+    --ph-primary-border: #bfdbfe;
+    --ph-ink: #0f172a;
+    --ph-muted: #64748b;
+    --ph-border: rgba(226, 232, 240, 0.85);
+    --ph-surface: #ffffff;
+    --ph-radius: 18px;
+    --ph-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.05), 0 4px 12px -2px rgba(15, 23, 42, 0.02);
+}
+
+/* ------------------------------------------------------------
+   PAGE HEADER (.ph) - FROSTED GLASS & VIBRANT GRADIENTS
+   ------------------------------------------------------------ */
+.ph {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 20px 26px;
+    border: 1px solid var(--ph-border);
+    border-radius: var(--ph-radius);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--ph-shadow);
+    position: relative;
+    z-index: 100;
+    overflow: visible;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ph:hover {
+    box-shadow: 0 16px 40px -4px rgba(15, 23, 42, 0.08);
+}
+
+.ph::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 35%, #06b6d4 70%, #10b981 100%);
+}
+
+.ph-copy {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+}
+
+.ph-icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    place-items: center;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 16px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #2563eb;
+    font-size: 24px;
+    box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.22);
+    transition: all 0.3s ease;
+}
+
+.ph:hover .ph-icon {
+    transform: scale(1.08) rotate(-4deg);
+    box-shadow: 0 10px 24px -2px rgba(37, 99, 235, 0.35);
+}
+
+.ph-eyebrow {
+    margin: 0 0 3px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.08);
+    color: #2563eb;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ph-eyebrow i {
+    font-size: 10px;
+}
+
+.ph-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 850;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.ph-subtitle {
+    margin: 4px 0 0;
+    color: var(--ph-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.ph-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-left: auto;
+    position: relative;
+    z-index: 1050;
+}
+
+.ph .dropdown-menu {
+    z-index: 1060 !important;
+}
+
+.ph-actions .btn {
+    border-radius: 12px !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    padding: 10px 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    transition: all 0.25s ease !important;
+}
+
+.ph-actions .btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35) !important;
+}
+
+.ph-actions .btn-primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5) !important;
+}
+
+.ph-actions .btn-outline-primary {
+    border: 1px solid rgba(59, 130, 246, 0.4) !important;
+    color: var(--ph-primary) !important;
+    background: #ffffff !important;
+}
+
+.ph-actions .btn-outline-primary:hover {
+    background: #eff6ff !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* ------------------------------------------------------------
+   SECTION HEADER (.sh)
+   ------------------------------------------------------------ */
+.sh {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.sh-copy {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.sh-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    place-items: center;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 12px;
+    background: var(--ph-primary-soft);
+    color: var(--ph-primary);
+    font-size: 19px;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
+}
+
+.sh-eyebrow {
+    margin: 0 0 2px 0;
+    color: var(--ph-primary);
+    font-size: 0.65rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sh-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--ph-ink);
+}
+
+.sh-subtitle {
+    margin: 3px 0 0;
+    color: var(--ph-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.sh-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .ph {
+        padding: 16px 18px;
+        align-items: flex-start;
+    }
+
+    .ph-icon {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+        font-size: 20px;
+    }
+
+    .ph-title {
+        font-size: 1.25rem;
+    }
+
+    .ph-actions {
+        width: 100%;
+        margin-top: 6px;
+    }
+}

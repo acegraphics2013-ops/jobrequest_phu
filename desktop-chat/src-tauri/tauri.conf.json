@@ -1,0 +1,40 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "phu-chat-companion",
+  "version": "1.0.0",
+  "identifier": "com.phu.jobrequest.desktopchat",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "PHU Chat Desktop Companion",
+        "width": 460,
+        "height": 680,
+        "resizable": true,
+        "fullscreen": false,
+        "alwaysOnTop": true,
+        "transparent": true,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

@@ -1,0 +1,1109 @@
+/* =========================================================
+   PHU JOB REQUEST SYSTEM — COMPACT STACKED SIDEBAR STYLES
+   ========================================================= */
+
+:root {
+    --sb-expanded-width: 220px;
+    --sb-collapsed-width: 64px;
+    --sb-bg-dark: #0b0f19;
+    --sb-bg-hover: rgba(255, 255, 255, 0.06);
+    --sb-bg-active: rgba(37, 99, 235, 0.16);
+    --sb-text-color: #94a3b8;
+    --sb-text-hover: #f8fafc;
+    --sb-text-active: #60a5fa;
+    --sb-border-color: rgba(255, 255, 255, 0.07);
+    --sb-icon-color: #64748b;
+    --sb-icon-hover: #60a5fa;
+    --sb-icon-active: #3b82f6;
+    --sb-indicator-color: #3b82f6;
+    --sb-flyout-bg: #111a2e;
+    --sb-focus-ring: 0 0 0 2px #0b0f19, 0 0 0 4px #60a5fa;
+}
+
+/* Prevent layout shift during page load */
+html.sidebar-is-collapsed .sidebar,
+.sidebar.is-collapsed {
+    width: var(--sb-collapsed-width) !important;
+    min-width: var(--sb-collapsed-width) !important;
+}
+
+.sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-shrink: 0 !important;
+    width: var(--sb-expanded-width) !important;
+    min-width: var(--sb-expanded-width) !important;
+    height: 100vh !important;
+    /* NOTE: keep visible (not hidden) so collapsed tooltips,
+       submenu flyouts and the user dropdown can overflow. */
+    overflow: visible !important;
+    background: var(--sb-bg-dark) !important;
+    color: var(--sb-text-color) !important;
+    border-right: 1px solid var(--sb-border-color) !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15) !important;
+    z-index: 1030 !important;
+    transition: width 0.2s ease-out, min-width 0.2s ease-out !important;
+    user-select: none !important;
+}
+
+/* BRAND HEADER */
+.sidebar-brand {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 0 12px !important;
+    border-bottom: 1px solid var(--sb-border-color) !important;
+    background: var(--sb-bg-dark) !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+}
+
+.brand-content {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-decoration: none !important;
+    color: #ffffff !important;
+}
+
+.brand-content:hover,
+.brand-content:focus {
+    text-decoration: none !important;
+    color: #ffffff !important;
+}
+
+.brand-icon-wrap {
+    display: grid !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    place-items: center !important;
+    border-radius: 8px !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35) !important;
+    flex-shrink: 0 !important;
+}
+
+.brand-text {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.brand-title {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+    letter-spacing: normal !important;
+    text-decoration: none !important;
+}
+
+.brand-subtitle {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: #94a3b8 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 1px !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+}
+
+.sidebar-toggle-btn {
+    display: grid !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    place-items: center !important;
+    border: none !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.sidebar-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+}
+
+.sidebar.is-collapsed .sidebar-toggle-btn .toggle-icon {
+    transform: rotate(180deg) !important;
+}
+
+.sidebar.is-collapsed .brand-text {
+    display: none !important;
+}
+
+/* Collapsed header: center the logo, dock the toggle as a small
+   floating handle on the edge so 32px + 32px never overflow 64px. */
+.sidebar.is-collapsed .sidebar-brand {
+    justify-content: center !important;
+    padding: 0 !important;
+    height: 60px !important;
+    min-height: 60px !important;
+}
+
+.sidebar.is-collapsed .brand-content {
+    gap: 0 !important;
+}
+
+.sidebar.is-collapsed .sidebar-toggle-btn {
+    position: absolute !important;
+    right: -11px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    border-radius: 50% !important;
+    background: #1e293b !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    color: #cbd5e1 !important;
+    font-size: 11px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+    z-index: 2 !important;
+}
+
+.sidebar.is-collapsed .sidebar-toggle-btn:hover {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+/* SIDEBAR MENU */
+.sidebar-menu {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 8px !important;
+    scroll-behavior: smooth !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent !important;
+}
+
+/* In collapsed mode the menu must not clip tooltips / flyouts. */
+.sidebar.is-collapsed .sidebar-menu {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+    width: 4px !important;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 4px !important;
+}
+
+/* SECTION HEADING */
+.sidebar-section-heading {
+    padding: 10px 8px 4px 10px !important;
+    margin-top: 4px !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: #64748b !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.sidebar-section-heading:first-child {
+    margin-top: 0 !important;
+}
+
+.sidebar.is-collapsed .sidebar-section-heading {
+    display: none !important;
+}
+
+/* Collapsed spacing: breathe between icon groups where headings hide. */
+.sidebar.is-collapsed .sidebar-menu > .nav-link:first-of-type {
+    margin-top: 4px !important;
+}
+
+/* NAV LINKS */
+.sidebar .nav-link,
+.sidebar-link {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 12px !important;
+    margin: 2px 0 !important;
+    border-radius: 8px !important;
+    border-left: none !important;
+    box-shadow: none !important;
+    color: var(--sb-text-color) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    transform: none !important;
+}
+
+.sidebar .nav-link i,
+.sidebar-link i {
+    display: grid !important;
+    place-items: center !important;
+    width: 16px !important;
+    min-width: 16px !important;
+    font-size: 16px !important;
+    color: var(--sb-icon-color) !important;
+    transition: color 0.15s ease !important;
+    transform: none !important;
+}
+
+.sidebar .nav-link span,
+.sidebar-link span {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.sidebar .nav-link:hover,
+.sidebar-link:hover {
+    color: #f8fafc !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    transform: none !important;
+}
+
+.sidebar .nav-link:hover i,
+.sidebar-link:hover i {
+    color: #60a5fa !important;
+    transform: none !important;
+}
+
+/* Visible keyboard focus for all sidebar controls. */
+.sidebar .nav-link:focus-visible,
+.sidebar-link:focus-visible,
+.nav-group-toggle:focus-visible,
+.sidebar-toggle-btn:focus-visible,
+.sidebar-user-card:focus-visible,
+.mobile-nav-toggle:focus-visible,
+.user-dropdown-item:focus-visible {
+    outline: none !important;
+    box-shadow: var(--sb-focus-ring) !important;
+}
+
+/* ACTIVE LINK STYLING WITH 3PX LEFT BLUE INDICATOR BAR */
+.sidebar .nav-link.active,
+.sidebar-link.active {
+    color: #60a5fa !important;
+    background: rgba(37, 99, 235, 0.15) !important;
+    font-weight: 600 !important;
+    border-left: none !important;
+    box-shadow: none !important;
+}
+
+.sidebar .nav-link.active i,
+.sidebar-link.active i {
+    color: #3b82f6 !important;
+}
+
+.sidebar .nav-link.active::before,
+.sidebar-link.active::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 6px !important;
+    bottom: 6px !important;
+    width: 3px !important;
+    background: #3b82f6 !important;
+    border-radius: 0 2px 2px 0 !important;
+}
+
+/* BADGES */
+.sidebar-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    padding: 0 5px !important;
+    border-radius: 9999px !important;
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+}
+
+.sidebar.is-collapsed .sidebar-badge {
+    position: absolute !important;
+    top: 3px !important;
+    right: 3px !important;
+    min-width: 15px !important;
+    height: 15px !important;
+    padding: 0 3px !important;
+    font-size: 8px !important;
+    margin-left: 0 !important;
+    border: 2px solid var(--sb-bg-dark) !important;
+    box-sizing: content-box !important;
+}
+
+/* STACKED SUBMENU */
+.nav-group {
+    margin: 2px 0 !important;
+    position: relative !important;
+}
+
+.nav-group-toggle {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    color: var(--sb-text-color) !important;
+    font-family: inherit !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+    position: relative !important;
+    text-align: left !important;
+    transform: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+}
+
+.nav-group-toggle:hover {
+    color: #f8fafc !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    transform: none !important;
+}
+
+.nav-group-toggle i:not(.nav-chevron) {
+    display: grid !important;
+    place-items: center !important;
+    width: 16px !important;
+    min-width: 16px !important;
+    font-size: 16px !important;
+    color: var(--sb-icon-color) !important;
+}
+
+.nav-group-toggle .nav-chevron {
+    margin-left: auto !important;
+    font-size: 11px !important;
+    color: #64748b !important;
+    transition: transform 0.2s ease !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+}
+
+.nav-group.open > .nav-group-toggle .nav-chevron {
+    transform: rotate(180deg) !important;
+    color: #60a5fa !important;
+}
+
+.nav-group-toggle.active {
+    color: #60a5fa !important;
+    background: rgba(37, 99, 235, 0.1) !important;
+}
+
+.nav-group-menu {
+    display: none !important;
+    padding: 2px 0 2px 6px !important;
+    margin-left: 14px !important;
+    border-left: 1px solid var(--sb-border-color) !important;
+}
+
+.nav-group.open > .nav-group-menu {
+    display: block !important;
+}
+
+.nav-group-menu .nav-link {
+    height: 32px !important;
+    min-height: 32px !important;
+    font-size: 12.5px !important;
+}
+
+/* COLLAPSED MODE ADJUSTMENTS */
+.sidebar.is-collapsed .nav-link span,
+.sidebar.is-collapsed .nav-group-toggle span,
+.sidebar.is-collapsed .nav-chevron {
+    display: none !important;
+}
+
+.sidebar.is-collapsed .nav-link,
+.sidebar.is-collapsed .nav-group-toggle {
+    justify-content: center !important;
+    padding: 0 !important;
+}
+
+/* Collapsed flyout: submenu opens as a floating panel so its
+   items stay reachable while the rail is collapsed. */
+.sidebar.is-collapsed .nav-group.open > .nav-group-menu {
+    display: block !important;
+    position: absolute !important;
+    left: calc(100% + 10px) !important;
+    top: 0 !important;
+    min-width: 210px !important;
+    margin-left: 0 !important;
+    padding: 6px !important;
+    background: var(--sb-flyout-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
+    z-index: 1060 !important;
+}
+
+.sidebar.is-collapsed .nav-group.open > .nav-group-menu .nav-link {
+    justify-content: flex-start !important;
+    padding: 0 12px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+}
+
+.sidebar.is-collapsed .nav-group.open > .nav-group-menu .nav-link span {
+    display: block !important;
+}
+
+.sidebar.is-collapsed .nav-group.open > .nav-group-menu .nav-link.active::before {
+    left: 0 !important;
+}
+
+/* HOVER + FOCUS TOOLTIPS ON COLLAPSED MODE */
+.sidebar.is-collapsed .nav-link[data-tooltip]::after,
+.sidebar.is-collapsed .nav-group-toggle[data-tooltip]::after,
+.sidebar.is-collapsed .sidebar-user-card[data-tooltip]::after {
+    content: attr(data-tooltip) !important;
+    position: absolute !important;
+    left: calc(100% + 10px) !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    padding: 5px 10px !important;
+    background: #1e293b !important;
+    color: #ffffff !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    border-radius: 6px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.15s ease, visibility 0.15s ease !important;
+    z-index: 1070 !important;
+}
+
+.sidebar.is-collapsed .nav-link:hover[data-tooltip]::after,
+.sidebar.is-collapsed .nav-group-toggle:hover[data-tooltip]::after,
+.sidebar.is-collapsed .sidebar-user-card:hover[data-tooltip]::after,
+.sidebar.is-collapsed .nav-link:focus-visible[data-tooltip]::after,
+.sidebar.is-collapsed .nav-group-toggle:focus-visible[data-tooltip]::after,
+.sidebar.is-collapsed .sidebar-user-card:focus-visible[data-tooltip]::after {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Hide the parent toggle tooltip while its flyout is open. */
+.sidebar.is-collapsed .nav-group.open > .nav-group-toggle[data-tooltip]::after {
+    display: none !important;
+}
+
+/* USER SECTION AT BOTTOM */
+.sidebar-user-section {
+    position: relative !important;
+    padding: 12px !important;
+    border-top: 1px solid var(--sb-border-color) !important;
+    background: var(--sb-bg-dark) !important;
+    flex-shrink: 0 !important;
+}
+
+.sidebar-user-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 4px !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+    position: relative !important;
+    width: 100% !important;
+    text-align: left !important;
+    font-family: inherit !important;
+}
+
+.sidebar-user-card:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.sidebar-avatar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    border-radius: 50% !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+.sidebar-avatar img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+}
+
+.sidebar-avatar .status-dot {
+    position: absolute !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    width: 11px !important;
+    height: 11px !important;
+    border-radius: 50% !important;
+    border: 2px solid #ffffff !important;
+    background-color: #10b981 !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, .30) !important;
+    z-index: 2 !important;
+}
+
+.sidebar-user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.sidebar-user-info .user-name {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+}
+
+.sidebar-user-info .user-role {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 2px !important;
+}
+
+.user-menu-dots {
+    margin-left: auto !important;
+    color: #94a3b8 !important;
+    font-size: 16px !important;
+    padding: 4px !important;
+    border-radius: 6px !important;
+    transition: color 0.15s ease, background 0.15s ease !important;
+}
+
+.sidebar-user-card:hover .user-menu-dots {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar.is-collapsed .sidebar-user-info,
+.sidebar.is-collapsed .user-menu-dots {
+    display: none !important;
+}
+
+.sidebar.is-collapsed .sidebar-user-card {
+    justify-content: center !important;
+    padding: 0 !important;
+}
+
+.sidebar.is-collapsed .sidebar-user-section {
+    padding: 12px 0 !important;
+}
+
+/* USER DROPDOWN POPUP */
+.sidebar-user-dropdown {
+    display: none !important;
+    position: absolute !important;
+    bottom: calc(100% + 8px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    background: #0f172a !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    padding: 4px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+    z-index: 1050 !important;
+}
+
+.sidebar.is-collapsed .sidebar-user-dropdown {
+    left: calc(100% + 10px) !important;
+    bottom: 0 !important;
+    width: 180px !important;
+    right: auto !important;
+}
+
+.sidebar-user-dropdown.show {
+    display: block !important;
+    animation: fadeInSlideUp 0.15s ease-out !important;
+}
+
+@keyframes fadeInSlideUp {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.user-dropdown-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+    color: #cbd5e1 !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    border-radius: 6px !important;
+    transition: background 0.12s ease, color 0.12s ease !important;
+}
+
+.user-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+
+.user-dropdown-item.text-danger {
+    color: #f87171 !important;
+}
+
+.user-dropdown-item.text-danger:hover {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #fca5a5 !important;
+}
+
+.user-dropdown-divider {
+    height: 1px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    margin: 4px 0 !important;
+}
+
+/* RESPONSIVE DRAWER & MOBILE TOPBAR */
+.mobile-top-nav {
+    display: none !important;
+}
+
+.sidebar-mobile-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(2px) !important;
+    z-index: 1040 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.25s ease, visibility 0.25s ease !important;
+}
+
+.sidebar-mobile-backdrop.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+@media (max-width: 767px) {
+    /* Fixed topbar: removed from the flex row so it no longer
+       squeezes the sidebar / content layout. Scoped body offset
+       keeps sidebar-less pages (login, etc.) unaffected. */
+    body:has(.mobile-top-nav) {
+        padding-top: 48px !important;
+    }
+
+    .mobile-top-nav {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        height: 48px !important;
+        padding: 0 14px !important;
+        background: #0b0f19 !important;
+        color: #ffffff !important;
+        border-bottom: 1px solid var(--sb-border-color) !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1045 !important;
+    }
+
+    .mobile-nav-toggle {
+        background: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-size: 22px !important;
+        cursor: pointer !important;
+        padding: 4px !important;
+        display: grid !important;
+        place-items: center !important;
+        border-radius: 8px !important;
+    }
+
+    .mobile-nav-toggle:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Collapse rail + tooltips + flyouts are desktop-only. */
+    .sidebar.is-collapsed .nav-group.open > .nav-group-menu {
+        position: static !important;
+        min-width: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        border-left: 1px solid var(--sb-border-color) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 2px 0 2px 6px !important;
+        margin-left: 14px !important;
+    }
+
+    .sidebar.is-collapsed .nav-group.open > .nav-group-menu .nav-link span {
+        display: block !important;
+    }
+
+    .sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 48px !important;
+        bottom: 0 !important;
+        width: var(--sb-expanded-width) !important;
+        min-width: var(--sb-expanded-width) !important;
+        height: calc(100vh - 48px) !important;
+        transform: translateX(-105%) !important;
+        box-shadow: 4px 0 25px rgba(0, 0, 0, 0.3) !important;
+        transition: transform 0.25s ease !important;
+        z-index: 1050 !important;
+        overflow-y: auto !important;
+    }
+
+    html.sidebar-is-collapsed .sidebar,
+    .sidebar.is-collapsed {
+        width: var(--sb-expanded-width) !important;
+        min-width: var(--sb-expanded-width) !important;
+    }
+
+    /* Force full expanded layout inside the drawer. */
+    .sidebar.is-collapsed .sidebar-brand {
+        justify-content: space-between !important;
+        padding: 0 12px !important;
+        height: 64px !important;
+        min-height: 64px !important;
+    }
+
+    .sidebar.is-collapsed .brand-text {
+        display: flex !important;
+    }
+
+    .sidebar.is-collapsed .sidebar-toggle-btn {
+        position: static !important;
+        transform: none !important;
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 14px !important;
+    }
+
+    .sidebar.is-collapsed .sidebar-menu {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .sidebar.is-collapsed .sidebar-section-heading {
+        display: block !important;
+    }
+
+    .sidebar.is-collapsed .nav-link span,
+    .sidebar.is-collapsed .nav-group-toggle span,
+    .sidebar.is-collapsed .nav-chevron {
+        display: block !important;
+    }
+
+    .sidebar.is-collapsed .nav-group-toggle .nav-chevron {
+        display: block !important;
+        margin-left: auto !important;
+    }
+
+    .sidebar.is-collapsed .nav-link,
+    .sidebar.is-collapsed .nav-group-toggle {
+        justify-content: flex-start !important;
+        padding: 0 12px !important;
+    }
+
+    .sidebar.is-collapsed .nav-link[data-tooltip]::after,
+    .sidebar.is-collapsed .nav-group-toggle[data-tooltip]::after,
+    .sidebar.is-collapsed .sidebar-user-card[data-tooltip]::after {
+        display: none !important;
+    }
+
+    .sidebar.is-collapsed .sidebar-user-info,
+    .sidebar.is-collapsed .user-menu-dots {
+        display: flex !important;
+    }
+
+    .sidebar.is-collapsed .sidebar-user-card {
+        justify-content: flex-start !important;
+        padding: 4px !important;
+    }
+
+    .sidebar.is-collapsed .sidebar-user-section {
+        padding: 12px !important;
+    }
+
+    .sidebar.is-collapsed .sidebar-user-dropdown {
+        left: 12px !important;
+        right: 12px !important;
+        bottom: calc(100% + 8px) !important;
+        width: auto !important;
+    }
+
+    .sidebar.is-collapsed .sidebar-badge {
+        position: static !important;
+        min-width: 18px !important;
+        height: 18px !important;
+        padding: 0 5px !important;
+        font-size: 10px !important;
+        border: none !important;
+        margin-left: auto !important;
+    }
+
+    .sidebar.mobile-show {
+        transform: translateX(0) !important;
+    }
+
+    .sidebar-mobile-backdrop.show {
+        top: 48px !important;
+    }
+}
+
+/* Lock body scroll while the mobile drawer is open. */
+body.sidebar-drawer-open {
+    overflow: hidden !important;
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .sidebar-mobile-backdrop,
+    .sidebar .nav-link,
+    .nav-group-toggle,
+    .nav-group-toggle .nav-chevron,
+    .sidebar-menu {
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+
+    .sidebar-user-dropdown.show {
+        animation: none !important;
+    }
+}
+
+/* Never print the app sidebar / mobile chrome. */
+@media print {
+    .sidebar,
+    .mobile-top-nav,
+    .sidebar-mobile-backdrop {
+        display: none !important;
+    }
+}
+
+/* =========================================================
+   UX FIX PACK — scrollable collapsed rail + hover peek,
+   settings active states, accessible dropdown
+   ========================================================= */
+
+/* Collapsed rail keeps a working scrollbar; tooltips still work
+   because the rail is narrow but the menu no longer clips them
+   once hover-peek expands it (see .hover-expanded below). */
+.sidebar.is-collapsed .sidebar-menu {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* Hover-peek: temporarily behave like the expanded sidebar. */
+.sidebar.is-collapsed.hover-expanded {
+    width: var(--sb-expanded-width) !important;
+    min-width: var(--sb-expanded-width) !important;
+}
+.sidebar.is-collapsed.hover-expanded .sidebar-brand {
+    justify-content: space-between !important;
+    padding: 0 12px !important;
+    height: 64px !important;
+    min-height: 64px !important;
+}
+.sidebar.is-collapsed.hover-expanded .brand-text {
+    display: flex !important;
+}
+.sidebar.is-collapsed.hover-expanded .sidebar-toggle-btn {
+    position: static !important;
+    transform: none !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+}
+.sidebar.is-collapsed.hover-expanded .sidebar-section-heading {
+    display: block !important;
+}
+.sidebar.is-collapsed.hover-expanded .nav-link span,
+.sidebar.is-collapsed.hover-expanded .nav-group-toggle span,
+.sidebar.is-collapsed.hover-expanded .nav-chevron {
+    display: block !important;
+}
+.sidebar.is-collapsed.hover-expanded .nav-group-toggle .nav-chevron {
+    margin-left: auto !important;
+}
+.sidebar.is-collapsed.hover-expanded .nav-link,
+.sidebar.is-collapsed.hover-expanded .nav-group-toggle {
+    justify-content: flex-start !important;
+    padding: 0 12px !important;
+}
+.sidebar.is-collapsed.hover-expanded .nav-link[data-tooltip]::after,
+.sidebar.is-collapsed.hover-expanded .nav-group-toggle[data-tooltip]::after,
+.sidebar.is-collapsed.hover-expanded .sidebar-user-card[data-tooltip]::after {
+    display: none !important;
+}
+.sidebar.is-collapsed.hover-expanded .sidebar-user-info,
+.sidebar.is-collapsed.hover-expanded .user-menu-dots {
+    display: flex !important;
+}
+.sidebar.is-collapsed.hover-expanded .sidebar-user-card {
+    justify-content: flex-start !important;
+    padding: 4px !important;
+}
+.sidebar.is-collapsed.hover-expanded .sidebar-user-section {
+    padding: 12px !important;
+}
+.sidebar.is-collapsed.hover-expanded .sidebar-user-dropdown {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(100% + 8px) !important;
+    width: auto !important;
+}
+.sidebar.is-collapsed.hover-expanded .sidebar-badge {
+    position: static !important;
+    min-width: 18px !important;
+    height: 18px !important;
+    padding: 0 5px !important;
+    font-size: 10px !important;
+    border: none !important;
+    margin-left: auto !important;
+}
+/* Inline submenu while peeking (no floating flyout needed). */
+.sidebar.is-collapsed.hover-expanded .nav-group.open > .nav-group-menu {
+    position: static !important;
+    min-width: 0 !important;
+    margin-left: 14px !important;
+    padding: 2px 0 2px 6px !important;
+    background: transparent !important;
+    border: none !important;
+    border-left: 1px solid var(--sb-border-color) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Flyout safety when JS is off / before expand: cap height + scroll. */
+.sidebar.is-collapsed:not(.hover-expanded) .nav-group.open > .nav-group-menu {
+    max-height: min(60vh, 420px) !important;
+    overflow-y: auto !important;
+}
+
+/* Active account context: highlight the user card on settings pages. */
+.sidebar-user-card.has-active {
+    background: rgba(37, 99, 235, 0.15) !important;
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.35) !important;
+}
+.sidebar-user-card.has-active .user-menu-dots {
+    color: #60a5fa !important;
+}
+
+/* Dropdown heading + active item. */
+.user-dropdown-heading {
+    margin: 0 !important;
+    padding: 8px 12px 4px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: #64748b !important;
+}
+.user-dropdown-item.active {
+    background: rgba(37, 99, 235, 0.18) !important;
+    color: #93c5fd !important;
+    font-weight: 700 !important;
+}
+.user-dropdown-item.active i {
+    color: #60a5fa !important;
+}
+.user-dropdown-item .bi-check-lg {
+    font-size: 13px !important;
+}
+
+/* Never hover-peek inside the mobile drawer. */
+@media (max-width: 767px) {
+    .sidebar.is-collapsed.hover-expanded {
+        width: var(--sb-expanded-width) !important;
+        min-width: var(--sb-expanded-width) !important;
+    }
+}

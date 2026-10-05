@@ -1,0 +1,37 @@
+CLIENT EXPERIENCE SURVEY INTEGRATION
+
+1. Upload:
+   /user/client_experience_survey.php
+
+2. Run once in phpMyAdmin:
+   job_request_client_experience.sql
+
+3. In notifications.php, set the evaluation path to:
+   $evaluationPath = "/user/client_experience_survey.php";
+
+4. Workflow:
+   - Staff opens:
+     /user/client_experience_survey.php?id=REQUEST_ID
+   - Staff sends the survey notification.
+   - The requestor opens the notification.
+   - Survey submission is allowed when status is:
+       Completed
+       For Evaluation
+   - After submission, the request status changes to:
+       Closed
+   - Staff, supervisors and admins receive an in-system notification.
+
+5. Existing tables expected:
+   job_requests
+   users
+   notifications
+
+6. Existing notification columns expected:
+   request_id
+   user_id
+   title
+   message
+   notification_type
+   action_url
+   is_read
+   created_at

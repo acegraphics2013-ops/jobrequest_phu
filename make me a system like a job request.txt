@@ -1,0 +1,224 @@
+make me a full system like a job request with staff account, the requestor default to (user,user) (HPU Job Request System)the fields are
+
+Requestor Information,
+
+Job Request Number(auto base on date today)Requestor name, Department/Office, Contact Number,  Date Request, Date of Completion
+
+Creation and Approval of Activity Design
+
+I. Job Details
+
+	Type of Request: Checkbox [Graphic Design], [Video Production], [Photo/Video Coverage], [IEC Materials]
+
+a. Title/Project Name: (textbox)
+
+b. Purpose/Objective: (textbox)
+
+c. Even Date & Time: (textbox) ☐ (Check if non-applicable) disable textbox if check) 
+
+c. Venue / Location (if applicable): (textbox) ☐ (Check if non-applicable) disable textbox if check) 
+
+c.Send them to (if applicable): (textbox) ☐ (Check if non-applicable) disable textbox if check) 
+
+Processing Materials and Activity Equipment
+
+II. Job Description & Specifications
+
+if [Graphic Design] check
+
+enable GRAPHIC DESIGN
+
+Type of Design
+
+  ☐ Digital Ad                         
+
+  ☐ Print Ad / Tarpaulin
+
+  ☐ Brochure
+
+  ☐ Poster / Flyer
+
+  ☐ Invitation
+
+  ☐ Forms / Cards
+
+  ☐ Logo Design
+
+  ☐ Others: (enable text box if check)
+
+Color:
+
+ ☐ Full Color
+
+ ☐ Single Color
+
+ ☐ Grayscale
+
+Publication Method:
+
+ ☐ Digital File
+
+ ☐ Tarpaulin
+
+ ☐ Photo Paper
+
+ ☐ Others: (text box if check)
+
+Quantity: (number)
+
+if [Video Production] check
+
+enable VIDEO PRODUCTION
+
+Type of Video:
+
+  ☐ Digital Video Ads
+
+  ☐ Music Video
+
+  ☐ Promotional
+
+  ☐ Documentary
+
+  ☐ Instructional
+
+  ☐ Informative
+
+  ☐ DOH Videos
+
+  ☐ Others: (enable text box if check) 
+
+Format:
+
+  ☐ MP4
+
+  ☐ MP3 (Audio Only)
+
+  ☐ Others: (enable text box if check)
+
+  
+
+Quantity 
+
+(if applicable):  (number)
+
+                 
+
+if [Photo/Video Coverage] check
+
+enable PHOTO/VIDEO COVERAGE
+
+Number of Photographers Needed: (number)
+
+                
+
+Specific Shots Required
+
+(please describe):
+
+ (textbox 1000 words)
+
+Image/Video Format
+
+(Please check all that apply):
+
+  ☐ JPEG
+
+  ☐ PNG
+
+  ☐ RAW
+
+  ☐ MP4
+
+  ☐ MKV
+
+  ☐ Others: (enable text box if check)
+
+Quantity 
+
+(if applicable):    
+
+   
+
+if [IEC Materials] check
+
+enable IEC MATERIALS
+
+Requested IEC	Qty.
+
+(checkbox)5S Dengue	(number)
+
+(checkbox)ASTMMC Serv’s	(number)	
+
+(checkbox)Breastfeeding	(number)
+
+(checkbox)Diphtheria	(number)	
+
+(checkbox)DOH Materials	(number)
+
+(checkbox)Earthquake	(number)
+
+(checkbox)Handwashing	(number)
+
+(checkbox)HIV / AIDS	(number)
+
+(checkbox)Leptospirosis	(number)
+
+(checkbox)Mental Health	(number)
+
+(checkbox)MPOX		(number)
+
+(checkbox)Patient Rights	(number)
+
+(checkbox)Patient and Watcher Handbook	(number)
+
+(checkbox)Others:	(enable text box if check (number))
+
+(textbox) (mm/dd/yyyy)
+
+Name & Signature of Requestor / Date
+
+ 
+
+(checkbox) Reviewed by: (dropdown) ACE R. CABUGA, GREG Y. MASANGKAY, JEA A. DAYO 
+
+(textbox) (mm/dd/yyyy)
+
+Name & Signature of HPU Personnel / Date
+
+☐ (checkbox) Disapproved (Reason): (textbox)
+
+Approved by: (checkbox)
+
+BELL MANDREW MANLIGUEZ, RN - HEPO II
+
+page 2 if approved
+
+Implementation and Monitoring Activity
+
+III. Development and Review (to be filled out by HPU Personnel)
+
+Date of Initial Draft Submission
+
+Final Design Approval Date
+
+Revision Required?  ☐ Yes  ☐ No, Number of Revisions:     
+
+Mode of Distribution (if applicable): N/A
+
+Creation and Approval of Post Activity Report
+
+IV. Post Project Evaluation
+
+•	Was the design delivered on time?  ☐ Yes  ☐ No
+
+•	Did the design meet the objectives?  ☐ Yes  ☐ No
+
+•	Were there any challenges encountered?  ☐ Yes  ☐ No (If yes, please specify): 				
+
+													
+
+•	Suggestions for Improvement:			N/A							
+
+•	Overall Satisfaction Rating:        ☐  1. Poor    ☐  2. Fair     ☐  3. Good    ☐  4. Very Good    ☐  5. Excellent
+

@@ -1,0 +1,104 @@
+<div class="row g-3 mb-4">
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="card h-100">
+
+                            <div class="card-body">
+
+                                <div class="text-muted small fw-bold">
+                                    FOR REVISION
+                                </div>
+
+                                <div class="fs-2 fw-bold mt-2">
+                                    <?= $forRevision ?>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="card h-100">
+
+                            <div class="card-body">
+
+                                <div class="text-muted small fw-bold">
+                                    CLOSED REQUESTS
+                                </div>
+
+                                <div class="fs-2 fw-bold mt-2">
+                                    <?= $closed ?>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="card h-100">
+
+                            <div class="card-body">
+
+                                <div class="text-muted small fw-bold">
+                                    COMPLETION RATE
+                                </div>
+
+                                <?php
+                                $completionRate =
+                                    $totalRequests > 0
+                                        ? round(
+                                            (
+                                                (
+                                                    $completed +
+                                                    $closed
+                                                ) /
+                                                $totalRequests
+                                            ) *
+                                            100,
+                                            1
+                                        )
+                                        : 0;
+                                ?>
+
+                                <div class="fs-2 fw-bold mt-2">
+                                    <?= $completionRate ?>%
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6 col-xl-3">
+
+                        <div class="card h-100">
+
+                            <div class="card-body">
+
+                                <div class="text-muted small fw-bold">
+                                    AVERAGE RATING
+                                </div>
+
+                                <div class="fs-2 fw-bold mt-2">
+                                    <?= number_format(
+                                        $averageRating,
+                                        1
+                                    ) ?>
+                                    / 5
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
