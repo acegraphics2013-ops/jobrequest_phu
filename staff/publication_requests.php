@@ -369,6 +369,9 @@ function pubStatusClass(
         "Closed" =>
             "status-closed",
 
+        "Cancelled" =>
+            "status-cancelled",
+
         default =>
             "status-review"
     };
@@ -430,6 +433,13 @@ function pubStatusMeta(string $status): array
             "meaning" => "Fully finalized, no further action required",
         ],
 
+        "Cancelled" => [
+            "label" => "Cancelled",
+            "icon" => "bi-x-octagon-fill",
+            "class" => "status-cancelled",
+            "meaning" => "Submission cancelled, submitter notified",
+        ],
+
         default => [
             "label" => $status !== "" ? $status : "For Review",
             "icon" => "bi-inbox",
@@ -441,16 +451,22 @@ function pubStatusMeta(string $status): array
 
 /*
 | Allowed moves from a status: stay (notes-only), advance one step,
-| or send back one step for rework. Skips (e.g. For Review straight
+| or send back one step for rework. "Cancelled" is reachable from any
+| active stage (For Review / In Preparation / For Approval) and is
+| terminal together with "Closed". Skips (e.g. For Review straight
 | to Published) are rejected. Unknown legacy statuses stay flexible.
 */
 function pubAllowedTransitions(string $current): array
 {
+    if (in_array($current, ["Cancelled", "Closed"], true)) {
+        return [$current];
+    }
+
     $stages = pubWorkflowStages();
     $index = array_search($current, $stages, true);
 
     if ($index === false) {
-        return $stages;
+        return array_merge($stages, ["Cancelled"]);
     }
 
     $allowed = [$current];
@@ -461,6 +477,10 @@ function pubAllowedTransitions(string $current): array
 
     if (isset($stages[$index - 1])) {
         $allowed[] = $stages[$index - 1];
+    }
+
+    if (!in_array("Cancelled", $allowed, true)) {
+        $allowed[] = "Cancelled";
     }
 
     return array_values($allowed);
@@ -1864,7 +1884,8 @@ $allowedStatuses = [
     "In Preparation",
     "For Approval",
     "Published",
-    "Closed"
+    "Closed",
+    "Cancelled"
 ];
 
 if (
@@ -5938,7 +5959,11 @@ $eventStats =
                 COALESCE(
                     SUM(status = 'Closed'),
                     0
-                ) AS closed
+                ) AS closed,
+                COALESCE(
+                    SUM(status = 'Cancelled'),
+                    0
+                ) AS cancelled
              FROM publication_event_submissions"
         )
         ->fetch_assoc()
@@ -5968,7 +5993,11 @@ $recognitionStats =
                 COALESCE(
                     SUM(status = 'Closed'),
                     0
-                ) AS closed
+                ) AS closed,
+                COALESCE(
+                    SUM(status = 'Cancelled'),
+                    0
+                ) AS cancelled
              FROM publication_recognition_submissions"
         )
         ->fetch_assoc()
@@ -5998,7 +6027,11 @@ $contributionStats =
                 COALESCE(
                     SUM(status = 'Closed'),
                     0
-                ) AS closed
+                ) AS closed,
+                COALESCE(
+                    SUM(status = 'Cancelled'),
+                    0
+                ) AS cancelled
              FROM publication_content_contributions"
         )
         ->fetch_assoc()
@@ -6099,6 +6132,22 @@ $stats = [
         (int)(
             $contributionStats["closed"]
             ?? 0
+        ),
+
+    "cancelled" =>
+        (int)(
+            $eventStats["cancelled"]
+            ?? 0
+        )
+        +
+        (int)(
+            $recognitionStats["cancelled"]
+            ?? 0
+        )
+        +
+        (int)(
+            $contributionStats["cancelled"]
+            ?? 0
         )
 ];
 
@@ -6150,6 +6199,12 @@ if ($tab !== "all") {
         "closed" =>
             (int)(
                 $tabStats["closed"]
+                ?? 0
+            ),
+
+        "cancelled" =>
+            (int)(
+                $tabStats["cancelled"]
                 ?? 0
             ),
     ];
@@ -6385,7 +6440,7 @@ body{
 
 .kpi-grid{
     display:grid;
-    grid-template-columns:repeat(6,minmax(0,1fr));
+    grid-template-columns:repeat(7,minmax(0,1fr));
     gap:8px;
     margin-bottom:10px;
 }
@@ -6440,6 +6495,11 @@ body{
     background:#f3f5f8;
 }
 
+.kpi-card.status-cancelled{
+    border-color:#fecdca;
+    background:#fffbfa;
+}
+
 .kpi-card.status-published{
     border-color:#d1e7dd;
     background:#d1e7dd;
@@ -6474,6 +6534,12 @@ body{
 .kpi-card.status-published .kpi-label,
 .kpi-card.status-published .kpi-note{
     color:#0f1721;
+}
+
+.kpi-card.status-cancelled .kpi-value,
+.kpi-card.status-cancelled .kpi-label,
+.kpi-card.status-cancelled .kpi-note{
+    color:#b42318;
 }
 
 .kpi-note{
@@ -7086,6 +7152,11 @@ body{
 .status-closed{
     background:#f2f4f7;
     color:#667085;
+}
+
+.status-cancelled{
+    background:#fee4e2;
+    color:#b42318;
 }
 
 .detail-card{
@@ -8354,9 +8425,9 @@ body.ultra-compact .mini-progress{margin-top:6px;}
 /* KPI cards with icon tiles */
 .kpi-grid {
     display: grid !important;
-    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-    gap: 12px !important;
-    margin-bottom: 16px !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
     align-items: stretch !important;
 }
 
@@ -8392,11 +8463,11 @@ a.kpi-card-link:focus-visible {
     justify-content: space-between !important;
     align-items: stretch !important;
     height: 100% !important;
-    min-height: 136px !important;
-    padding: 14px 16px !important;
+    min-height: 96px !important;
+    padding: 9px 11px !important;
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 14px !important;
+    border-radius: 11px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.02) !important;
     position: relative !important;
     overflow: hidden !important;
@@ -8413,7 +8484,7 @@ a.kpi-card-link:focus-visible {
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    height: 3.5px !important;
+    height: 3px !important;
     background: #cbd5e1 !important;
     transition: height 0.15s ease !important;
 }
@@ -8424,6 +8495,7 @@ a.kpi-card-link:focus-visible {
 .kpi-card.status-for_approval::before { background: linear-gradient(90deg, #7c3aed, #a78bfa) !important; }
 .kpi-card.status-published::before { background: linear-gradient(90deg, #16a34a, #4ade80) !important; }
 .kpi-card.status-closed::before { background: linear-gradient(90deg, #64748b, #94a3b8) !important; }
+.kpi-card.status-cancelled::before { background: linear-gradient(90deg, #d92d20, #f97066) !important; }
 
 a.kpi-card-link:hover .kpi-card {
     transform: translateY(-3px) !important;
@@ -8446,19 +8518,19 @@ a.kpi-card-link.kpi-active .kpi-card::before {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 9px !important;
-    margin-bottom: 8px !important;
+    gap: 7px !important;
+    margin-bottom: 4px !important;
     width: 100% !important;
 }
 
 .kpi-ico {
     display: grid !important;
-    width: 34px !important;
-    height: 34px !important;
-    flex: 0 0 34px !important;
+    width: 26px !important;
+    height: 26px !important;
+    flex: 0 0 26px !important;
     place-items: center !important;
-    border-radius: 9px !important;
-    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+    font-size: 0.8rem !important;
     transition: transform 0.15s ease !important;
 }
 
@@ -8472,14 +8544,15 @@ a.kpi-card-link:hover .kpi-ico {
 .kpi-ico.approval { background: #f5f3ff !important; color: #7c3aed !important; }
 .kpi-ico.ok { background: #f0fdf4 !important; color: #16a34a !important; }
 .kpi-ico.muted { background: #f8fafc !important; color: #64748b !important; border: 1px solid #e2e8f0 !important; }
+.kpi-ico.danger { background: #fee4e2 !important; color: #b42318 !important; }
 
 .kpi-label {
     color: #475569 !important;
-    font-size: 0.7rem !important;
+    font-size: 0.6rem !important;
     font-weight: 800 !important;
     letter-spacing: 0.04em !important;
     text-transform: uppercase !important;
-    line-height: 1.25 !important;
+    line-height: 1.2 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
@@ -8494,13 +8567,13 @@ a.kpi-card-link:hover .kpi-ico {
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 3px !important;
 }
 
 .kpi-value {
     margin: 0 !important;
     color: #0f172a !important;
-    font-size: 1.65rem !important;
+    font-size: 1.2rem !important;
     line-height: 1.1 !important;
     font-weight: 800 !important;
     letter-spacing: -0.02em !important;
@@ -8508,9 +8581,9 @@ a.kpi-card-link:hover .kpi-ico {
 }
 
 .kpi-note {
-    margin-top: 3px !important;
+    margin-top: 2px !important;
     color: #64748b !important;
-    font-size: 0.68rem !important;
+    font-size: 0.6rem !important;
     line-height: 1.35 !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
@@ -8551,6 +8624,7 @@ a.kpi-card-link:hover .kpi-ico {
 .kpi-card.status-for_approval .kpi-share > span { background: #7c3aed !important; }
 .kpi-card.status-published .kpi-share > span { background: #16a34a !important; }
 .kpi-card.status-closed .kpi-share > span { background: #64748b !important; }
+.kpi-card.status-cancelled .kpi-share > span { background: #d92d20 !important; }
 
 .kpi-share-num {
     margin: 0 !important;
@@ -9017,6 +9091,11 @@ a.kpi-card-link:hover .kpi-ico {
     color: #ffffff;
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
 }
+.wf-step-blocked .wf-circle {
+    background: #dc2626;
+    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
 .wf-label {
     font-size: 0.62rem;
     font-weight: 700;
@@ -9031,6 +9110,10 @@ a.kpi-card-link:hover .kpi-ico {
 }
 .wf-step-disapproved .wf-label {
     color: #dc2626;
+}
+.wf-step-blocked .wf-label {
+    color: #dc2626;
+    font-weight: 800;
 }
 .wf-line {
     flex: 1;
@@ -9075,6 +9158,310 @@ a.kpi-card-link:hover .kpi-ico {
     padding: 4px 10px;
     border-radius: 8px;
     transition: all 0.15s ease;
+}
+/* ---------- Cards / List view toggle + list format ---------- */
+.view-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid #dbe3ee;
+    border-radius: 9px;
+    overflow: hidden;
+    background: #fff;
+}
+.view-toggle .meta-btn {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+.view-toggle .meta-btn + .meta-btn {
+    border-left: 1px solid #dbe3ee;
+}
+.meta-btn.is-active {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+.pub-list-wrap {
+    overflow-x: auto;
+    margin: 0 10px 10px;
+    border: 1px solid #e6ecf4;
+    border-radius: 12px;
+    background: #fff;
+}
+.pub-table {
+    width: 100%;
+    min-width: 860px;
+    border-collapse: collapse;
+    font-size: .75rem;
+}
+.pub-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 9px 10px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: .62rem;
+    font-weight: 850;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid #e6ecf4;
+}
+.pub-table tbody td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #eef2f7;
+    vertical-align: middle;
+}
+.pub-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+.pub-table tbody tr:hover {
+    background: #f8fbff;
+}
+.pub-table .pub-title {
+    max-width: 300px;
+    font-weight: 800;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.pub-table .pub-sub {
+    color: #64748b;
+    font-size: .66rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 300px;
+}
+.pub-table .row-actions {
+    white-space: nowrap;
+    text-align: right;
+}
+.pub-table .row-actions .btn {
+    padding: 3px 8px;
+    font-size: .68rem;
+    border-radius: 7px;
+}
+body[data-pub-view="list"] .submission-list {
+    display: none;
+}
+body[data-pub-view="cards"] .pub-list-wrap {
+    display: none;
+}
+/* ---------- Redesigned submission cards (compact inbox-style) ---------- */
+.submission-card.event-card-v2 {
+    border-left-width: 3px;
+    padding: 12px 14px 0;
+}
+.submission-card.event-card-v2.status-review { border-left-color: #f59e0b; }
+.submission-card.event-card-v2.status-preparation { border-left-color: #2563eb; }
+.submission-card.event-card-v2.status-approval { border-left-color: #7c3aed; }
+.submission-card.event-card-v2.status-published { border-left-color: #16a34a; }
+.submission-card.event-card-v2.status-closed { border-left-color: #64748b; }
+.submission-card.event-card-v2.status-cancelled { border-left-color: #dc2626; }
+.pub-top {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+.pub-avatar {
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border-radius: 11px;
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .02em;
+}
+.pub-avatar.avatar-event { background: #eff6ff; color: #1d4ed8; }
+.pub-avatar.avatar-recognition { background: #fff7ed; color: #b54708; }
+.pub-avatar.avatar-contribution { background: #f0fdf4; color: #065f46; }
+.pub-main {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.pub-title-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+.pub-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1 1 180px;
+    color: #0f172a;
+    font-size: .9rem;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    text-decoration: none;
+}
+.pub-title:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+.pub-approval {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: .64rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.pub-approval.is-approved {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+.pub-meta {
+    display: flex;
+    align-items: center;
+    gap: 4px 12px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+    color: #64748b;
+    font-size: .7rem;
+    min-width: 0;
+}
+.pub-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.pub-meta-item i {
+    color: #9aa6b8;
+}
+.pub-meta-item.pub-type {
+    color: #475569;
+}
+.kind-pill.pub-kind {
+    font-size: .6rem;
+    padding: 3px 8px;
+}
+.pub-sub {
+    display: flex;
+    align-items: center;
+    gap: 4px 14px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+    color: #7c8aa0;
+    font-size: .68rem;
+    min-width: 0;
+}
+.pub-sub-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.pub-sub-item i {
+    color: #9aa6b8;
+}
+.pub-unassigned {
+    color: #b54708;
+    font-style: italic;
+}
+.pub-approver {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 6px;
+    color: #15803d;
+    font-weight: 700;
+}
+.pub-side {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+.pub-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+.pub-actions .btn-icon {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 8px;
+}
+.pub-actions .btn {
+    font-size: .7rem;
+    font-weight: 800;
+}
+.pub-flow {
+    margin: 10px -14px 0;
+    padding: 9px 14px 11px;
+    border-top: 1px dashed #e6ecf4;
+    background: #fafcff;
+    border-radius: 0 0 12px 12px;
+}
+.pub-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 10px -14px 0;
+    padding: 7px 14px;
+    border-top: 1px solid #f1f5f9;
+    color: #94a3b8;
+    font-size: .66rem;
+    font-weight: 650;
+}
+.pub-foot-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.pub-foot-item.pub-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #64748b;
+}
+@media (max-width: 760px) {
+    .pub-top {
+        flex-wrap: wrap;
+    }
+    .pub-side {
+        width: 100%;
+        align-items: stretch;
+    }
+    .pub-actions {
+        justify-content: stretch;
+    }
+    .pub-actions .btn-primary {
+        flex: 1;
+    }
 }
 @media (max-width: 991px) {
     .event-card-v2-info-grid { grid-template-columns: repeat(2, 1fr); }
@@ -9236,6 +9623,7 @@ a.kpi-card-link:hover .kpi-ico {
         "For Approval" => ["key" => "for_approval", "tone" => "approval"],
         "Published" => ["key" => "published", "tone" => "ok"],
         "Closed" => ["key" => "closed", "tone" => "muted"],
+        "Cancelled" => ["key" => "cancelled", "tone" => "danger"],
     ];
 
     foreach ($kpiStages as $kpiStatus => $kpiConf):
@@ -9447,6 +9835,14 @@ a.kpi-card-link:hover .kpi-ico {
                 <span class="live-count" id="pubLiveCount" aria-live="polite">Showing <?= count($rows) ?> submission<?= count($rows) === 1 ? "" : "s" ?></span>
                 <span class="spacer"></span>
                 <span><kbd>/</kbd> search&nbsp;&nbsp;<kbd>esc</kbd> clear</span>
+                <div class="view-toggle" role="group" aria-label="Change layout">
+                    <button type="button" class="meta-btn" id="pubViewCards" aria-pressed="true" title="Card layout">
+                        <i class="bi bi-grid"></i> Cards
+                    </button>
+                    <button type="button" class="meta-btn" id="pubViewList" aria-pressed="false" title="Compact list layout">
+                        <i class="bi bi-list-ul"></i> List
+                    </button>
+                </div>
                 <label class="visually-hidden" for="pubSort">Sort submissions</label>
                 <select id="pubSort" class="form-select form-select-sm">
                     <option value="newest">Newest first</option>
@@ -9541,49 +9937,47 @@ a.kpi-card-link:hover .kpi-ico {
                     }
                 }
 
-                // Dynamic 4-step horizontal workflow tracker: Submitted -> Approved -> Completed -> Closed
+                // Official 5-stage tracker: For Review -> In Preparation -> For Approval -> Published -> Closed.
+                // Cancelled is terminal: first step done, second blocked, rest pending.
                 $currStatus = trim((string)($row["status"] ?? ""));
-                $currStatusLower = strtolower($currStatus);
-
-                $wStep1 = 'completed'; // Step 1: Submitted
-                $wStep2 = 'pending';   // Step 2: Approved
-                $wStep3 = 'pending';   // Step 3: Completed
-                $wStep4 = 'pending';   // Step 4: Closed
-
-                if (in_array($currStatusLower, ['closed', 'done', 'finalized'], true)) {
-                    $wStep1 = 'completed';
-                    $wStep2 = 'completed';
-                    $wStep3 = 'completed';
-                    $wStep4 = 'completed';
-                } elseif (in_array($currStatusLower, ['published', 'completed'], true)) {
-                    $wStep1 = 'completed';
-                    $wStep2 = 'completed';
-                    $wStep3 = 'active';
-                    $wStep4 = 'pending';
-                } elseif (in_array($currStatusLower, ['approved', 'in preparation', 'in development', 'for approval', 'for evaluation', 'under review', 'for revision'], true)) {
-                    $wStep1 = 'completed';
-                    $wStep2 = 'active';
-                    $wStep3 = 'pending';
-                    $wStep4 = 'pending';
-                } elseif (in_array($currStatusLower, ['disapproved', 'rejected', 'cancelled'], true)) {
-                    $wStep1 = 'completed';
-                    $wStep2 = 'disapproved';
-                    $wStep3 = 'pending';
-                    $wStep4 = 'pending';
-                } else {
-                    // 'For Review', 'Pending Review', etc.
-                    $wStep1 = 'active';
-                    $wStep2 = 'pending';
-                    $wStep3 = 'pending';
-                    $wStep4 = 'pending';
-                }
-
-                $workflowSteps = [
-                    ["key" => "submitted", "label" => "Submitted", "state" => $wStep1],
-                    ["key" => "approved", "label" => "Approved", "state" => $wStep2],
-                    ["key" => "completed", "label" => "Completed", "state" => $wStep3],
-                    ["key" => "closed", "label" => "Closed", "state" => $wStep4],
+                $pubStages = pubWorkflowStages();
+                $pubStageLabels = [
+                    "For Review" => "Submitted",
+                    "In Preparation" => "Preparation",
+                    "For Approval" => "Approval",
+                    "Published" => "Published",
+                    "Closed" => "Closed",
                 ];
+                $currIndex = array_search($currStatus, $pubStages, true);
+                $isCancelledCard = (strtolower($currStatus) === "cancelled");
+
+                $workflowSteps = [];
+
+                foreach ($pubStages as $stageIdx => $stageName) {
+                    if ($isCancelledCard) {
+                        $state = $stageIdx === 0
+                            ? "completed"
+                            : ($stageIdx === 1 ? "blocked" : "pending");
+                        $label = $stageIdx === 1 ? "Cancelled" : ($pubStageLabels[$stageName] ?? $stageName);
+                    } elseif ($currStatus === "Closed") {
+                        $state = "completed";
+                        $label = $pubStageLabels[$stageName] ?? $stageName;
+                    } elseif ($currIndex === false) {
+                        $state = $stageIdx === 0 ? "active" : "pending";
+                        $label = $pubStageLabels[$stageName] ?? $stageName;
+                    } else {
+                        $state = $stageIdx < $currIndex
+                            ? "completed"
+                            : ($stageIdx === $currIndex ? "active" : "pending");
+                        $label = $pubStageLabels[$stageName] ?? $stageName;
+                    }
+
+                    $workflowSteps[] = [
+                        "key" => strtolower(str_replace(" ", "_", $stageName)),
+                        "label" => $label,
+                        "state" => $state,
+                    ];
+                }
 
                 $cardUnread = $chatUnread[(string)$kind . ":" . (int)$row["id"]] ?? 0;
                 $viewDetailsUrl = BASE_URL . "/staff/publication_requests.php?" . http_build_query([
@@ -9602,127 +9996,142 @@ a.kpi-card-link:hover .kpi-ico {
                 ]);
                 ?>
 
-                <article class="submission-card event-card-v2 <?= $isActive ? "active" : "" ?>"
+                <article class="submission-card event-card-v2 <?= e(pubStatusClass((string)$row["status"])) ?> <?= $isActive ? "active" : "" ?>"
                     data-kind="<?= e($kind) ?>"
                     data-status="<?= e((string)$row["status"]) ?>"
                     data-date="<?= e((string)($row["created_at"] ?? "")) ?>"
                     data-title="<?= e(mb_strtolower((string)$row["display_title"])) ?>"
                 >
-                    <!-- HEADER -->
-                    <div class="event-card-v2-header">
-                        <div class="header-left">
-                            <span class="kind-pill <?= $kind === "recognition" ? "kind-recognition" : ($kind === "contribution" ? "kind-contribution" : "kind-event") ?>">
-                                <i class="bi <?= e(pubKindIcon($kind)) ?> me-1"></i>
-                                <?= e(pubKindLabel($kind)) ?>
-                            </span>
-                        </div>
-                        <div class="header-right">
-                            <?php if ($cardApprovable > 0): ?>
-                                <span class="event-card-v2-approval-counter <?= $cardApproved >= $cardApprovable ? "is-approved" : "" ?>" title="Material approvals: <?= (int)$cardApproved ?> of <?= (int)$cardApprovable ?> assigned materials approved">
-                                    <i class="bi <?= $cardApproved >= $cardApprovable ? "bi-patch-check-fill" : "bi-hourglass-split" ?> me-1"></i>
-                                    <?= (int)$cardApproved ?> of <?= (int)$cardApprovable ?> Approved
+                    <?php
+                    $pubNameRaw = trim((string)($row["submitter_name"] ?: "Unknown User"));
+                    $pubNameParts = preg_split('/\s+/', $pubNameRaw) ?: [];
+                    $pubInitials = "";
+                    foreach (array_slice($pubNameParts, 0, 2) as $pubPart) {
+                        if ($pubPart !== "") {
+                            $pubInitials .= mb_strtoupper(mb_substr($pubPart, 0, 1));
+                        }
+                    }
+                    if ($pubInitials === "") {
+                        $pubInitials = "?";
+                    }
+                    $pubKindShort = $kind === "recognition" ? "Recognition" : ($kind === "contribution" ? "Contribution" : "Event");
+                    $pubStaffNames = [];
+                    foreach ($assignedStaffChips as $sChip) {
+                        if (($sChip["name"] ?? "") !== "") {
+                            $pubStaffNames[] = (string)$sChip["name"];
+                        }
+                    }
+                    $pubApproverName = "";
+                    foreach ($approverChips as $aChip) {
+                        if (($aChip["name"] ?? "") !== "") {
+                            $pubApproverName = (string)$aChip["name"];
+                            break;
+                        }
+                    }
+                    $pubTeamSummary = "";
+                    if (!empty($pubStaffNames)) {
+                        $pubTeamSummary = implode(", ", array_slice($pubStaffNames, 0, 2));
+                        if (count($pubStaffNames) > 2) {
+                            $pubTeamSummary .= " +" . (count($pubStaffNames) - 2);
+                        }
+                    }
+                    ?>
+                    <!-- REDESIGNED HEADER -->
+                    <div class="pub-top">
+                        <span class="pub-avatar avatar-<?= e($kind) ?>" title="<?= e($pubNameRaw) ?>" aria-hidden="true"><?= e($pubInitials) ?></span>
+                        <div class="pub-main">
+                            <div class="pub-title-row">
+                                <a class="pub-title" href="<?= e($viewDetailsUrl) ?>" title="<?= e($row["display_title"]) ?>">
+                                    <?= e($row["display_title"] ?: "Untitled submission") ?>
+                                </a>
+                                <span class="status-pill <?= e(pubStatusClass((string)$row["status"])) ?>">
+                                    <?= e($row["status"]) ?>
                                 </span>
-                            <?php endif; ?>
-                            <span class="status-pill <?= e(pubStatusClass((string)$row["status"])) ?>">
-                                <?= e($row["status"]) ?>
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- MAIN TITLE & METADATA BADGES -->
-                    <div class="event-card-v2-main">
-                        <h3 class="event-card-v2-title"><?= e($row["display_title"]) ?></h3>
-                        <div class="event-card-v2-badges">
-                            <span class="meta-badge category-badge">
-                                <i class="bi bi-tag-fill me-1"></i><?= e(mb_strimwidth($displayType, 0, 80, "…")) ?>
-                            </span>
-                            <?php if (!empty($row["office_label"])): ?>
-                                <span class="meta-badge dept-badge">
-                                    <i class="bi bi-building me-1"></i><?= e($row["office_label"]) ?>
-                                </span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <!-- 3-COLUMN COMPACT INFORMATION -->
-                    <div class="event-card-v2-info-grid">
-                        <div class="info-col">
-                            <div class="info-label"><i class="bi bi-person-fill text-primary me-1"></i> REQUESTOR</div>
-                            <div class="info-value" title="<?= e($row["submitter_name"] ?: "Unknown User") ?>">
-                                <?= e(ucwords(strtolower((string)($row["submitter_name"] ?: "Unknown User")))) ?>
-                            </div>
-                        </div>
-                        <div class="info-col">
-                            <div class="info-label"><i class="bi bi-envelope-fill text-primary me-1"></i> EMAIL</div>
-                            <div class="info-value text-truncate" title="<?= e($row["email_address"]) ?>">
-                                <?= e($row["email_address"]) ?>
-                            </div>
-                        </div>
-                        <div class="info-col">
-                            <div class="info-label"><i class="bi bi-calendar-event-fill text-primary me-1"></i> PREFERRED DATE</div>
-                            <div class="info-value">
-                                <?= e($prefDateFormatted) ?>
+                                <?php if ($cardApprovable > 0): ?>
+                                    <span class="pub-approval <?= $cardApproved >= $cardApprovable ? "is-approved" : "" ?>" title="Material approvals: <?= (int)$cardApproved ?> of <?= (int)$cardApprovable ?> assigned materials approved">
+                                        <i class="bi <?= $cardApproved >= $cardApprovable ? "bi-patch-check-fill" : "bi-hourglass-split" ?> me-1"></i>
+                                        <?= (int)$cardApproved ?>/<?= (int)$cardApprovable ?>
+                                    </span>
+                                <?php endif; ?>
                                 <?php if ($prefUrgentLabel !== ""): ?>
                                     <span class="pref-urgent-badge <?= e($prefUrgentClass) ?>"><?= e($prefUrgentLabel) ?></span>
                                 <?php endif; ?>
                             </div>
+                            <div class="pub-meta">
+                                <span class="pub-meta-item" title="<?= e($pubNameRaw) ?><?php $pubEmailRaw = trim((string)($row["email_address"] ?? "")); ?><?= $pubEmailRaw !== "" ? " — " . e($pubEmailRaw) : "" ?>">
+                                    <i class="bi bi-person"></i><?= e(ucwords(strtolower($pubNameRaw))) ?>
+                                </span>
+                                <?php if (!empty($row["office_label"])): ?>
+                                    <span class="pub-meta-item" title="<?= e($row["office_label"]) ?>">
+                                        <i class="bi bi-building"></i><?= e($row["office_label"]) ?>
+                                    </span>
+                                <?php endif; ?>
+                                <span class="kind-pill kind-<?= e($kind === "recognition" ? "recognition" : ($kind === "contribution" ? "contribution" : "event")) ?> pub-kind">
+                                    <i class="bi <?= e(pubKindIcon($kind)) ?> me-1"></i><?= e($pubKindShort) ?>
+                                </span>
+                                <?php if (trim((string)$displayType) !== ""): ?>
+                                    <span class="pub-meta-item pub-type" title="<?= e($displayType) ?>">
+                                        <i class="bi bi-tag"></i><?= e(mb_strimwidth($displayType, 0, 60, "…")) ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="pub-sub">
+                                <span class="pub-sub-item" title="Preferred publication date">
+                                    <i class="bi bi-calendar-event"></i><?= e($prefDateFormatted) ?>
+                                </span>
+                                <span class="pub-sub-item" title="Assigned team">
+                                    <i class="bi bi-people"></i>
+                                    <?php if ($pubTeamSummary !== ""): ?>
+                                        <?= e($pubTeamSummary) ?>
+                                    <?php else: ?>
+                                        <span class="pub-unassigned">No staff assigned</span>
+                                    <?php endif; ?>
+                                    <?php if ($pubApproverName !== ""): ?>
+                                        <span class="pub-approver"><i class="bi bi-shield-check"></i><?= e(mb_strimwidth($pubApproverName, 0, 28, "…")) ?></span>
+                                    <?php endif; ?>
+                                </span>
+                                <span class="pub-sub-item pub-submitted" title="<?= e((string)$row["created_at"]) ?>">
+                                    <i class="bi bi-clock-history"></i>Submitted <?= e(pubDateLabel((string)$row["created_at"], true)) ?>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="pub-side">
+                            <div class="pub-actions">
+                                <a class="btn btn-sm btn-outline-secondary btn-icon position-relative card-action-btn" href="<?= e($chatUrl) ?>" title="Open Communication Center" aria-label="Open Communication Center">
+                                    <i class="bi bi-chat-dots"></i>
+                                    <?php if ($cardUnread > 0): ?>
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                            <?= $cardUnread > 99 ? "99+" : (int)$cardUnread ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-secondary btn-icon copy-link-btn card-action-btn" data-copy-url="<?= e($viewDetailsUrl) ?>" title="Copy link to this submission" aria-label="Copy link to this submission">
+                                    <i class="bi bi-link-45deg"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary btn-icon card-action-btn pub-flow-btn" type="button" aria-expanded="false" title="Show status flow" aria-label="Show status flow">
+                                    <i class="bi bi-diagram-3"></i>
+                                </button>
+                                <?php if (!in_array((string)$row["status"], ["Published", "Closed", "Cancelled"], true)): ?>
+                                <form method="post" class="d-inline" onsubmit="return confirm('Cancel this submission? The submitter will be notified automatically.');">
+                                    <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+                                    <input type="hidden" name="action" value="update_workflow">
+                                    <input type="hidden" name="kind" value="<?= e($kind) ?>">
+                                    <input type="hidden" name="id" value="<?= (int)$row["id"] ?>">
+                                    <input type="hidden" name="status" value="Cancelled">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon card-action-btn" title="Cancel this submission and notify the submitter" aria-label="Cancel this submission">
+                                        <i class="bi bi-x-octagon"></i>
+                                    </button>
+                                </form>
+                                <?php endif; ?>
+                                <a class="btn btn-sm btn-primary card-action-btn" href="<?= e($viewDetailsUrl) ?>" title="View full submission details">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </a>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- ASSIGNMENT SECTION -->
-                    <div class="event-card-v2-assignments">
-                        <!-- ASSIGNED STAFF -->
-                        <div class="assignment-block">
-                            <span class="assignment-title"><i class="bi bi-people-fill me-1"></i> ASSIGNED STAFF</span>
-                            <div class="assignment-chips">
-                                <?php
-                                $hasStaffAssigned = false;
-                                foreach ($assignedStaffChips as $sChip):
-                                    if ($sChip["name"] !== ""):
-                                        $hasStaffAssigned = true;
-                                ?>
-                                    <span class="staff-chip" title="<?= e($sChip["label"]) ?>: <?= e($sChip["name"]) ?>">
-                                        <i class="bi <?= e($sChip["icon"]) ?> me-1"></i>
-                                        <strong class="staff-role"><?= e($sChip["label"]) ?>:</strong>
-                                        <span class="staff-name"><?= e($sChip["name"]) ?></span>
-                                    </span>
-                                <?php
-                                    endif;
-                                endforeach;
-                                if (!$hasStaffAssigned):
-                                ?>
-                                    <span class="staff-chip is-empty"><i class="bi bi-dash-circle me-1"></i> None Assigned</span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-
-                        <!-- APPROVER -->
-                        <div class="assignment-block">
-                            <span class="assignment-title"><i class="bi bi-shield-check me-1"></i> APPROVER</span>
-                            <div class="assignment-chips">
-                                <?php
-                                $hasApproverAssigned = false;
-                                foreach ($approverChips as $aChip):
-                                    if ($aChip["name"] !== ""):
-                                        $hasApproverAssigned = true;
-                                ?>
-                                    <span class="staff-chip approver-chip" title="Approver: <?= e($aChip["name"]) ?>">
-                                        <i class="bi bi-patch-check-fill me-1 text-success"></i>
-                                        <span class="staff-name"><?= e($aChip["name"]) ?></span>
-                                    </span>
-                                <?php
-                                    endif;
-                                endforeach;
-                                if (!$hasApproverAssigned):
-                                ?>
-                                    <span class="staff-chip is-empty"><i class="bi bi-dash-circle me-1"></i> Unassigned</span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- WORKFLOW TRACKER (hidden by default) -->
-                    <div class="event-card-v2-workflow is-hidden">
+                    <!-- WORKFLOW TRACKER (collapsible slim stepper) -->
+                    <div class="event-card-v2-workflow pub-flow is-hidden" id="pubflow-<?= e($kind) ?>-<?= (int)$row["id"] ?>">
                         <div class="wf-head">
                             <span class="wf-head-label"><i class="bi bi-diagram-3"></i> Status flow</span>
                             <button type="button" class="wf-hide-btn" aria-expanded="false" title="Show status flow">
@@ -9735,7 +10144,7 @@ a.kpi-card-link:hover .kpi-ico {
                                     <div class="wf-circle">
                                         <?php if ($ws["state"] === "completed"): ?>
                                             <i class="bi bi-check-lg"></i>
-                                        <?php elseif ($ws["state"] === "disapproved"): ?>
+                                        <?php elseif ($ws["state"] === "disapproved" || $ws["state"] === "blocked"): ?>
                                             <i class="bi bi-x-lg"></i>
                                         <?php elseif ($ws["state"] === "active"): ?>
                                             <span class="wf-pulse"></span>
@@ -9752,37 +10161,114 @@ a.kpi-card-link:hover .kpi-ico {
                         </div>
                     </div>
 
-                    <!-- FOOTER -->
-                    <div class="submission-foot event-card-v2-footer">
-                        <div class="footer-left">
-                            <i class="bi bi-clock-history me-1 text-muted"></i>
-                            <span class="submission-date">
-                                Submitted <?= e(pubDateLabel((string)$row["created_at"], true)) ?>
-                            </span>
-                        </div>
-                        <div class="footer-right d-inline-flex gap-2">
-                            <a class="btn btn-sm btn-outline-secondary position-relative card-action-btn" href="<?= e($chatUrl) ?>" title="Open Communication Center">
-                                <i class="bi bi-chat-dots me-1"></i> Chat
-                                <?php if ($cardUnread > 0): ?>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        <?= $cardUnread > 99 ? "99+" : (int)$cardUnread ?>
-                                    </span>
-                                <?php endif; ?>
-                            </a>
-
-                            <button type="button" class="btn btn-sm btn-outline-secondary copy-link-btn card-action-btn" data-copy-url="<?= e($viewDetailsUrl) ?>" title="Copy link to this submission" aria-label="Copy link to this submission">
-                                <i class="bi bi-link-45deg me-1"></i> Copy Link
-                            </button>
-
-                            <a class="btn btn-sm btn-primary card-action-btn" href="<?= e($viewDetailsUrl) ?>" title="View full submission details">
-                                <i class="bi bi-eye me-1"></i> View Details
-                            </a>
-                        </div>
+                    <!-- FOOTER (slim: type + code reference) -->
+                    <div class="submission-foot pub-foot">
+                        <span class="pub-foot-item" title="<?= e($displayType) ?>">
+                            <i class="bi bi-tag"></i><?= e(mb_strimwidth($displayType !== "" ? $displayType : pubKindLabel($kind), 0, 70, "…")) ?>
+                        </span>
+                        <span class="pub-foot-item pub-code" title="Submission reference">
+                            <i class="bi bi-hash"></i><?= e(publicationDisplayCode($kind, (int)$row["id"])) ?>
+                        </span>
                     </div>
                 </article>
 
                 <?php endforeach; ?>
 
+            </div>
+
+            <div class="pub-list-wrap">
+                <table class="pub-table" aria-label="Publication submissions in list format">
+                    <thead>
+                        <tr>
+                            <th scope="col">Submission</th>
+                            <th scope="col">Kind</th>
+                            <th scope="col">Requestor</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Submitted</th>
+                            <th scope="col" style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pubListBody">
+                        <?php foreach ($rows as $row): ?>
+                        <?php
+                        $listKind = (string)($row["submission_kind"] ?? "");
+                        $listTitle = trim((string)($row["display_title"] ?? ""));
+                        if ($listTitle === "") {
+                            $listTitle = "Untitled submission";
+                        }
+                        $listType = trim((string)($row["display_type"] ?? ""));
+                        $listRequestor = trim((string)($row["submitter_name"] ?? ""));
+                        if ($listRequestor === "") {
+                            $listRequestor = "Unknown User";
+                        }
+                        $listOffice = trim((string)(($row["office_label"] ?? "") !== "" ? $row["office_label"] : ($row["email_address"] ?? "")));
+                        $listStatus = (string)($row["status"] ?? "");
+                        $listCreated = (string)($row["created_at"] ?? "");
+                        $listViewUrl = BASE_URL . "/staff/publication_requests.php?" . http_build_query([
+                            "tab" => $tab,
+                            "status" => $statusFilter,
+                            "q" => $q,
+                            "view" => $listKind,
+                            "id" => (int)$row["id"]
+                        ]);
+                        $listChatUrl = BASE_URL . "/staff/publication_requests.php?" . http_build_query([
+                            "tab" => $tab,
+                            "status" => $statusFilter,
+                            "q" => $q,
+                            "chat" => $listKind,
+                            "chat_id" => (int)$row["id"]
+                        ]);
+                        $listCancellable = !in_array($listStatus, ["Published", "Closed", "Cancelled"], true);
+                        ?>
+                        <tr class="pub-row"
+                            data-status="<?= e($listStatus) ?>"
+                            data-date="<?= e($listCreated) ?>"
+                            data-title="<?= e(mb_strtolower($listTitle)) ?>">
+                            <td>
+                                <div class="pub-title" title="<?= e($listTitle) ?>"><?= e(mb_strimwidth($listTitle, 0, 80, "…")) ?></div>
+                                <?php if ($listType !== ""): ?>
+                                <div class="pub-sub" title="<?= e($listType) ?>"><?= e(mb_strimwidth($listType, 0, 80, "…")) ?></div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <span class="kind-pill <?= $listKind === "recognition" ? "kind-recognition" : ($listKind === "contribution" ? "kind-contribution" : "kind-event") ?>">
+                                    <?= e(pubKindLabel($listKind)) ?>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="pub-title" style="font-weight:700;" title="<?= e($listRequestor) ?>"><?= e(mb_strimwidth($listRequestor, 0, 40, "…")) ?></div>
+                                <?php if ($listOffice !== ""): ?>
+                                <div class="pub-sub" title="<?= e($listOffice) ?>"><?= e(mb_strimwidth($listOffice, 0, 50, "…")) ?></div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <span class="status-pill <?= e(pubStatusClass($listStatus)) ?>"><?= e($listStatus) ?></span>
+                            </td>
+                            <td style="white-space:nowrap;"><?= e(pubDateLabel($listCreated, true)) ?></td>
+                            <td class="row-actions">
+                                <a class="btn btn-sm btn-outline-secondary" href="<?= e($listChatUrl) ?>" title="Open Communication Center">
+                                    <i class="bi bi-chat-dots"></i>
+                                </a>
+                                <?php if ($listCancellable): ?>
+                                <form method="post" class="d-inline" onsubmit="return confirm('Cancel this submission? The submitter will be notified automatically.');">
+                                    <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+                                    <input type="hidden" name="action" value="update_workflow">
+                                    <input type="hidden" name="kind" value="<?= e($listKind) ?>">
+                                    <input type="hidden" name="id" value="<?= (int)$row["id"] ?>">
+                                    <input type="hidden" name="status" value="Cancelled">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel this submission">
+                                        <i class="bi bi-x-octagon"></i>
+                                    </button>
+                                </form>
+                                <?php endif; ?>
+                                <a class="btn btn-sm btn-primary" href="<?= e($listViewUrl) ?>" title="View full submission details">
+                                    <i class="bi bi-eye me-1"></i>View
+                                </a>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
 
             <?php endif; ?>
@@ -13521,7 +14007,8 @@ document.addEventListener("DOMContentLoaded", function () {
             "In Preparation": "Content is being prepared by the production team. The submitter is notified.",
             "For Approval": "Ready for final supervisor approval. The submitter is notified.",
             "Published": "Marks the material as published and stamps the publish date. The submitter is notified.",
-            "Closed": "Terminal state — no further edits expected. The submitter is notified."
+            "Closed": "Terminal state — no further edits expected. The submitter is notified.",
+            "Cancelled": "Cancels the submission. The submitter is notified automatically."
         };
 
         var initialStatus = status ? status.value : "";
@@ -13547,6 +14034,14 @@ document.addEventListener("DOMContentLoaded", function () {
         if (status) status.addEventListener("change", refresh);
         if (notes) notes.addEventListener("input", refresh);
         refresh();
+
+        form.addEventListener("submit", function (e) {
+            if (status && status.value === "Cancelled") {
+                if (!window.confirm("Cancel this submission? The submitter will be notified automatically.")) {
+                    e.preventDefault();
+                }
+            }
+        });
     })();
 
     /* Hide / show toggle for the Publication Workflow (status flow) section. */
@@ -13837,6 +14332,28 @@ document.addEventListener("DOMContentLoaded", function () {
             btn.setAttribute("title", hidden ? "Show status flow" : "Hide status flow");
             if (label) label.textContent = hidden ? "Show" : "Hide";
         });
+        /* Header flow shortcut button toggles the same collapsible flow. */
+        list.addEventListener("click", function (e) {
+            var flowBtn = e.target && e.target.closest
+                ? e.target.closest(".pub-flow-btn")
+                : null;
+            if (!flowBtn || !list.contains(flowBtn)) return;
+            var card = flowBtn.closest(".submission-card");
+            if (!card) return;
+            var flow = card.querySelector(".event-card-v2-workflow");
+            if (!flow) return;
+            var hidden = flow.classList.toggle("is-hidden");
+            flowBtn.setAttribute("aria-expanded", hidden ? "false" : "true");
+            flowBtn.setAttribute("title", hidden ? "Show status flow" : "Hide status flow");
+            flowBtn.classList.toggle("btn-primary", !hidden);
+            flowBtn.classList.toggle("btn-outline-secondary", hidden);
+            var headBtn = flow.querySelector(".wf-hide-btn");
+            if (headBtn) {
+                headBtn.setAttribute("aria-expanded", hidden ? "false" : "true");
+                var headLabel = headBtn.querySelector("span");
+                if (headLabel) headLabel.textContent = hidden ? "Show" : "Hide";
+            }
+        });
     });
 
     /* ---------- search: clear, shortcuts, auto-submit status ---------- */
@@ -13950,18 +14467,60 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     } catch (e) {}
 
-    /* ---------- cards: instant filter + client sort ---------- */
+    /* ---------- cards + list: instant filter + client sort + view toggle ---------- */
     var list = document.querySelector(".submission-list");
     var cards = list
         ? $all(".submission-card", list)
         : [];
+    var listBody = document.getElementById("pubListBody");
+    var listRows = listBody
+        ? $all(".pub-row", listBody)
+        : [];
+    var viewCardsBtn = document.getElementById("pubViewCards");
+    var viewListBtn = document.getElementById("pubViewList");
     var liveCount = document.getElementById("pubLiveCount");
     var sortSelect = document.getElementById("pubSort");
     var serverTotal = cards.length;
     var statusOrder = [
         "For Review", "In Preparation", "For Approval",
-        "Published", "Closed"
+        "Published", "Closed", "Cancelled"
     ];
+    function isListView() {
+        return document.body.getAttribute("data-pub-view") === "list";
+    }
+    function setPubView(mode, save) {
+        var listMode = mode === "list";
+        document.body.setAttribute("data-pub-view", listMode ? "list" : "cards");
+        if (viewCardsBtn) {
+            viewCardsBtn.classList.toggle("is-active", !listMode);
+            viewCardsBtn.setAttribute("aria-pressed", !listMode ? "true" : "false");
+        }
+        if (viewListBtn) {
+            viewListBtn.classList.toggle("is-active", listMode);
+            viewListBtn.setAttribute("aria-pressed", listMode ? "true" : "false");
+        }
+        try {
+            if (save !== false) {
+                localStorage.setItem("pub_view", listMode ? "list" : "cards");
+            }
+        } catch (e) {}
+        applyInstant(currentQuery());
+    }
+    try {
+        var savedView = localStorage.getItem("pub_view");
+        document.body.setAttribute(
+            "data-pub-view", savedView === "list" ? "list" : "cards"
+        );
+    } catch (e) {
+        document.body.setAttribute("data-pub-view", "cards");
+    }
+    if (viewCardsBtn) {
+        viewCardsBtn.addEventListener("click", function () { setPubView("cards"); });
+    }
+    if (viewListBtn) {
+        viewListBtn.addEventListener("click", function () { setPubView("list"); });
+    }
+    setPubView(isListView() ? "list" : "cards", false);
     var noMatch = null;
     if (list) {
         noMatch = document.createElement("div");
@@ -13987,8 +14546,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 || (c.textContent || "").toLowerCase()
                     .indexOf(q) !== -1;
             c.style.display = hit ? "" : "none";
-            if (hit) shown++;
+            if (hit && !isListView()) shown++;
         });
+        var listShown = 0;
+        listRows.forEach(function (r) {
+            var hit = !q
+                || (r.textContent || "").toLowerCase()
+                    .indexOf(q) !== -1;
+            r.style.display = hit ? "" : "none";
+            if (hit) listShown++;
+        });
+        if (isListView()) shown = listShown;
         if (liveCount) {
             liveCount.textContent = q
                 ? shown + " of " + serverTotal + " shown • typing"
@@ -13997,22 +14565,42 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (noMatch) {
             noMatch.style.display =
-                (q && shown === 0) ? "" : "none";
+                (!isListView() && q && shown === 0) ? "" : "none";
+        }
+        if (listBody) {
+            var emptyRow = document.getElementById("pubListEmpty");
+            if (q && listShown === 0 && isListView()) {
+                if (!emptyRow) {
+                    emptyRow = document.createElement("tr");
+                    emptyRow.id = "pubListEmpty";
+                    var cell = document.createElement("td");
+                    cell.colSpan = 6;
+                    cell.style.textAlign = "center";
+                    cell.style.padding = "26px 12px";
+                    cell.style.color = "#64748b";
+                    cell.textContent = "No rows match your typing — clear the search box to see them all.";
+                    emptyRow.appendChild(cell);
+                    listBody.appendChild(emptyRow);
+                }
+                emptyRow.style.display = "";
+            } else if (emptyRow) {
+                emptyRow.style.display = "none";
+            }
         }
     }
-    function applySort() {
-        if (!list || !sortSelect) return;
-        var mode = sortSelect.value;
-        var ordered = cards.slice();
-        ordered.sort(function (a, b) {
+    function sortItems(items, mode) {
+        return items.slice().sort(function (a, b) {
             if (mode === "title") {
                 return (a.dataset.title || "").localeCompare(
                     b.dataset.title || ""
                 );
             }
             if (mode === "status") {
-                return statusOrder.indexOf(a.dataset.status)
-                    - statusOrder.indexOf(b.dataset.status);
+                var ai = statusOrder.indexOf(a.dataset.status);
+                var bi = statusOrder.indexOf(b.dataset.status);
+                if (ai === -1) ai = 99;
+                if (bi === -1) bi = 99;
+                return ai - bi;
             }
             var da = a.dataset.date || "";
             var db = b.dataset.date || "";
@@ -14021,8 +14609,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 ? (da < db ? -1 : 1)
                 : (da > db ? -1 : 1);
         });
-        ordered.forEach(function (c) { list.appendChild(c); });
+    }
+    function applySort() {
+        if (!list || !sortSelect) return;
+        var mode = sortSelect.value;
+        sortItems(cards, mode).forEach(function (c) { list.appendChild(c); });
         if (noMatch) list.appendChild(noMatch);
+        if (listBody) {
+            sortItems(listRows, mode).forEach(function (r) { listBody.appendChild(r); });
+        }
         applyInstant(currentQuery());
     }
     if (searchInput) {

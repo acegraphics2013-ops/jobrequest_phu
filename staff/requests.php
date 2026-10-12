@@ -49,7 +49,8 @@ $summaryResult = $conn->query(
         SUM(approval_status = 'In Development') AS development_total,
         SUM(approval_status = 'Completed') AS completed_total,
         SUM(approval_status = 'For Evaluation') AS evaluation_total,
-        SUM(approval_status = 'Closed') AS closed_total
+        SUM(approval_status = 'Closed') AS closed_total,
+        SUM(approval_status = 'Cancelled') AS cancelled_total
      FROM job_requests
      WHERE COALESCE(archived, 0) = 0"
 );
@@ -65,6 +66,7 @@ $developmentTotal = (int) ($summary["development_total"] ?? 0);
 $completedTotal = (int) ($summary["completed_total"] ?? 0);
 $evaluationTotal = (int) ($summary["evaluation_total"] ?? 0);
 $closedTotal = (int) ($summary["closed_total"] ?? 0);
+$cancelledTotal = (int) ($summary["cancelled_total"] ?? 0);
 
 /* =========================================================
    DEPARTMENTS
@@ -261,6 +263,7 @@ function requestStatusClass(string $status): string
         "Completed" => "status-completed",
         "For Evaluation" => "status-evaluation",
         "Closed" => "status-closed",
+        "Cancelled" => "status-cancelled",
         default => "status-default"
     };
 }
@@ -277,6 +280,7 @@ function requestStatusIcon(string $status): string
         "Completed" => "bi-check2-all",
         "For Evaluation" => "bi-clipboard2-check",
         "Closed" => "bi-lock-fill",
+        "Cancelled" => "bi-x-octagon-fill",
         default => "bi-info-circle"
     };
 }
@@ -305,7 +309,7 @@ function requestTypeIcon(string $type): string
 
 function reviewButtonLabel(string $role, string $status): string
 {
-    if (in_array($status, ["Completed", "For Evaluation", "Closed"], true)) {
+    if (in_array($status, ["Completed", "For Evaluation", "Closed", "Cancelled"], true)) {
         return "Development";
     }
 
@@ -318,7 +322,7 @@ function reviewButtonLabel(string $role, string $status): string
 
 function reviewButtonIcon(string $role, string $status): string
 {
-    if (in_array($status, ["Completed", "For Evaluation", "Closed"], true)) {
+    if (in_array($status, ["Completed", "For Evaluation", "Closed", "Cancelled"], true)) {
         return "bi-tools";
     }
 
@@ -608,6 +612,17 @@ function staffDeadlineInfo(
         ];
     }
 
+    if ($status === "Cancelled") {
+        return [
+            "state" => "cancelled",
+            "text" => "Request cancelled",
+            "class" => "",
+            "icon" => "bi-x-octagon",
+            "lead_days" => $leadDays,
+            "target_date" => null
+        ];
+    }
+
     if (
         in_array(
             $status,
@@ -762,6 +777,7 @@ function requestWorkflowIndex(string $status): int
         "Closed" => 6,
         "For Revision" => 1,
         "Disapproved" => 1,
+        "Cancelled" => 1,
         default => 0
     };
 }
@@ -771,6 +787,16 @@ function requestWorkflowState(
     int $currentIndex,
     string $status
 ): string {
+    if ($status === "Cancelled") {
+        if ($stepIndex < $currentIndex) {
+            return "done";
+        }
+
+        return $stepIndex === $currentIndex
+            ? "blocked"
+            : "future";
+    }
+
     if ($status === "Disapproved") {
         if ($stepIndex < $currentIndex) {
             return "done";
@@ -850,7 +876,8 @@ $summaryCards = [
     ["label" => "Development", "status" => "In Development", "count" => $developmentTotal, "icon" => "bi-tools", "class" => "metric-development"],
     ["label" => "Completed", "status" => "Completed", "count" => $completedTotal, "icon" => "bi-check2-all", "class" => "metric-completed"],
     ["label" => "Evaluation", "status" => "For Evaluation", "count" => $evaluationTotal, "icon" => "bi-clipboard2-check", "class" => "metric-evaluation"],
-    ["label" => "Closed", "status" => "Closed", "count" => $closedTotal, "icon" => "bi-lock", "class" => "metric-closed"]
+    ["label" => "Closed", "status" => "Closed", "count" => $closedTotal, "icon" => "bi-lock", "class" => "metric-closed"],
+    ["label" => "Cancelled", "status" => "Cancelled", "count" => $cancelledTotal, "icon" => "bi-x-octagon", "class" => "metric-cancelled"]
 ];
 
 $workflowSteps = [
@@ -965,7 +992,7 @@ $workflowSteps = [
 
         .metrics-strip {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 8px;
             margin-bottom: 10px;
             padding-bottom: 2px;
@@ -1084,6 +1111,11 @@ $workflowSteps = [
         .metric-closed {
             --metric-color: #334155;
             --metric-bg: #edf0f4;
+        }
+
+        .metric-cancelled {
+            --metric-color: #b42318;
+            --metric-bg: #fee4e2;
         }
 
         .filter-panel {
@@ -1521,6 +1553,12 @@ $workflowSteps = [
             --status-soft: #f3f5f7;
         }
 
+        .request-row.status-cancelled {
+            --status-accent: #d92d20;
+            --status-border: #fecdca;
+            --status-soft: #fffbfa;
+        }
+
         .request-row.status-default {
             --status-accent: #8793a4;
             --status-border: #d9e0e9;
@@ -1581,6 +1619,11 @@ $workflowSteps = [
         .status-closed.status-badge {
             background: #e8ecf1;
             color: #263244;
+        }
+
+        .status-cancelled.status-badge {
+            background: #fee4e2;
+            color: #b42318;
         }
 
         .status-default.status-badge {
@@ -1944,6 +1987,10 @@ $workflowSteps = [
         }
 
         .delete-warning {
+            border-left: 4px solid var(--request-danger);
+        }
+
+        .cancel-warning {
             border-left: 4px solid var(--request-danger);
         }
 
@@ -2655,7 +2702,8 @@ $workflowSteps = [
                                                 "Disapproved",
                                                 "Completed",
                                                 "For Evaluation",
-                                                "Closed"
+                                                "Closed",
+                                                "Cancelled"
                                             ] as $filterStatus): ?>
                                                         <option value="<?= e($filterStatus) ?>" <?= $statusFilter === $filterStatus ? "selected" : "" ?>
                                                             >
@@ -2770,14 +2818,14 @@ $workflowSteps = [
 
                                         $canNotifyAnytime = in_array(
                                             $role,
-                                            ["staff", "supervisor"],
+                                            ["staff", "supervisor", "admin"],
                                             true
                                         );
 
                                         $showEvaluationButton = $canNotifyAnytime
                                             || in_array(
                                                 $status,
-                                                ["Completed", "For Evaluation", "Closed"],
+                                                ["Completed", "For Evaluation", "Closed", "Cancelled"],
                                                 true
                                             );
 
@@ -2866,7 +2914,13 @@ $workflowSteps = [
 
                                         $isFinished = in_array(
                                             $status,
-                                            ["Completed", "For Evaluation", "Closed"],
+                                            ["Completed", "For Evaluation", "Closed", "Cancelled"],
+                                            true
+                                        );
+
+                                        $isCancellable = !in_array(
+                                            $status,
+                                            ["Cancelled", "Closed"],
                                             true
                                         );
 
@@ -2883,6 +2937,7 @@ $workflowSteps = [
                                         <article class="request-row reveal <?= e(requestStatusClass($status)) ?>"
                                             data-search="<?= e($rowSearchHay) ?>"
                                             data-id="<?= (int) $row["id"] ?>"
+                                            data-status="<?= e($status) ?>"
                                             data-title="<?= e($rowSortTitle) ?>"
                                             data-deadline="<?= e($rowSortDeadline) ?>"
                                             data-deadline-state="<?= e($deadlineState) ?>"
@@ -3036,6 +3091,21 @@ $workflowSteps = [
                                                                     <li>
                                                                         <hr class="dropdown-divider">
                                                                     </li>
+
+                                                                    <?php if ($isCancellable): ?>
+                                                                    <li>
+                                                                        <button type="button" class="dropdown-item text-danger cancel-request-button"
+                                                                            data-bs-toggle="modal" data-bs-target="#cancelRequestModal"
+                                                                            data-id="<?= (int) $row["id"] ?>"
+                                                                            data-job-no="<?= e($row["job_no"] ?? "") ?>"
+                                                                            data-project="<?= e($row["project_title"] ?? "") ?>"
+                                                                            data-status="<?= e($status) ?>"
+                                                                            >
+                                                                            <i class="bi bi-x-octagon text-danger"></i>
+                                                                            Cancel request
+                                                                        </button>
+                                                                    </li>
+                                                                    <?php endif; ?>
 
                                                                     <li>
                                                                         <button type="button" class="dropdown-item archive-request-button"
@@ -3253,6 +3323,65 @@ $workflowSteps = [
                         </div>
                     </div>
                 </div>
+
+                <div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form method="POST" action="<?= e(BASE_URL) ?>/staff/cancel_request.php">
+                                <input type="hidden" name="csrf_token" value="<?= e($csrfToken) ?>">
+
+                                <input type="hidden" id="cancel_request_id" name="request_id">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title text-danger" id="cancelRequestModalLabel">
+                                        <i class="bi bi-x-octagon me-2"></i>
+                                        Cancel Job Request
+                                    </h5>
+
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <p class="mb-3">
+                                        Cancel this job request? The requestor will be notified automatically.
+                                    </p>
+
+                                    <div class="alert alert-light border py-2">
+                                        <strong id="cancel_job_number"></strong>
+                                        <div id="cancel_project_title" class="text-muted small mt-1"></div>
+                                        <div id="cancel_current_status" class="mt-1">
+                                            <span class="badge text-bg-light border">Status: <span id="cancel_status_text"></span></span>
+                                        </div>
+                                    </div>
+
+                                    <label class="form-label fw-semibold" for="cancel_reason">
+                                        Reason for cancellation <span class="text-muted fw-normal">(optional)</span>
+                                    </label>
+                                    <textarea class="form-control" id="cancel_reason" name="cancel_reason" rows="3" maxlength="1000"
+                                        placeholder="e.g. Duplicate request, withdrawn by requestor, cannot be accommodated…"></textarea>
+
+                                    <div class="alert alert-danger cancel-warning mt-3 mb-0 small">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        This sets the status to <strong>Cancelled</strong>. The request stays in the list for audit
+                                        and the requestor can no longer edit it.
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        Keep Request
+                                    </button>
+
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="bi bi-x-octagon me-1"></i>
+                                        Cancel Request
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
     <?php endif; ?>
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastStack" aria-live="polite">
@@ -3346,6 +3475,36 @@ $workflowSteps = [
 
                     if (projectTitleField) {
                         projectTitleField.textContent = this.dataset.project || "";
+                    }
+                });
+            });
+
+            document.querySelectorAll(".cancel-request-button").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    const requestIdField = document.getElementById("cancel_request_id");
+                    const jobNumberField = document.getElementById("cancel_job_number");
+                    const projectTitleField = document.getElementById("cancel_project_title");
+                    const statusText = document.getElementById("cancel_status_text");
+                    const reasonField = document.getElementById("cancel_reason");
+
+                    if (requestIdField) {
+                        requestIdField.value = this.dataset.id || "";
+                    }
+
+                    if (jobNumberField) {
+                        jobNumberField.textContent = this.dataset.jobNo || "";
+                    }
+
+                    if (projectTitleField) {
+                        projectTitleField.textContent = this.dataset.project || "";
+                    }
+
+                    if (statusText) {
+                        statusText.textContent = this.dataset.status || "";
+                    }
+
+                    if (reasonField) {
+                        reasonField.value = "";
                     }
                 });
             });

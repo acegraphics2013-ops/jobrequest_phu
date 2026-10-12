@@ -605,6 +605,9 @@ $statusClass = match ($status) {
     "Disapproved" =>
         "bg-danger",
 
+    "Cancelled" =>
+        "bg-danger",
+
     "For Revision" =>
         "bg-warning text-dark",
 
@@ -1529,6 +1532,23 @@ $evaluationLabel = $evaluationSubmitted
                                     <span id="convMsgBadge" class="<?= $convUnread > 0 ? "" : "d-none" ?>"><?= $convUnread > 99 ? "99+" : (int) $convUnread ?></span>
                                 </button>
                                 </span>
+                                <?php if (
+                                    in_array(
+                                        $currentRole,
+                                        [
+                                            "staff",
+                                            "supervisor",
+                                            "admin"
+                                        ],
+                                        true
+                                    )
+                                ): ?>
+                                <a class="phase3-tool-btn"
+                                    href="<?= e(BASE_URL) ?>/staff/evaluation.php?id=<?= (int) $requestId ?>"
+                                    title="Update status and notify the requestor">
+                                    <i class="bi bi-bell"></i> Notify Requestor
+                                </a>
+                                <?php endif; ?>
                                 <a class="phase3-tool-btn phase3-tool-primary"
                                     href="<?= e(BASE_URL) ?>/user/print_request.php?id=<?= (int) $request["id"] ?>"
                                     target="_blank" rel="noopener noreferrer" title="Open the print-ready request form">
@@ -2931,6 +2951,13 @@ $evaluationLabel = $evaluationSubmitted
                                         href="<?= e(BASE_URL) ?>/staff/review_request.php?id=<?= (int) $requestId ?>">
                                         <i class="bi bi-clipboard-check me-1"></i>
                                         Review / Development
+                                    </a>
+
+                                    <a class="btn btn-warning"
+                                        href="<?= e(BASE_URL) ?>/staff/evaluation.php?id=<?= (int) $requestId ?>"
+                                        title="Update status and notify the requestor">
+                                        <i class="bi bi-bell me-1"></i>
+                                        Notify Requestor
                                     </a>
 
                                 <?php endif; ?>

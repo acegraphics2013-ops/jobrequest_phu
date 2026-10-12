@@ -88,7 +88,8 @@ $allowedStatuses = [
     "In Development",
     "For Revision",
     "Completed",
-    "For Evaluation"
+    "For Evaluation",
+    "Cancelled"
 ];
 
 $statusNotificationMessages = [
@@ -111,7 +112,10 @@ $statusNotificationMessages = [
         "Your job request {$request["job_no"]} has been marked as completed. Please log in to review the completed request details.",
 
     "For Evaluation" =>
-        "Your job request {$request["job_no"]} is ready for evaluation. Please complete the Post Project Evaluation."
+        "Your job request {$request["job_no"]} is ready for evaluation. Please complete the Post Project Evaluation.",
+
+    "Cancelled" =>
+        "Your job request {$request["job_no"]} has been cancelled. Please log in to view the latest request details."
 ];
 
 /* Change these paths if your user pages use different filenames. */
@@ -483,6 +487,10 @@ function evHistoryIcon(?string $title): string
         return "bi-x-circle";
     }
 
+    if (str_contains($title, "cancel")) {
+        return "bi-x-circle";
+    }
+
     if (str_contains($title, "complet")) {
         return "bi-check2-all";
     }
@@ -567,6 +575,9 @@ $statusClass = match (
 
     "For Evaluation" =>
         "bg-warning text-dark",
+
+    "Cancelled" =>
+        "bg-danger",
 
     "Closed" =>
         "bg-success",
