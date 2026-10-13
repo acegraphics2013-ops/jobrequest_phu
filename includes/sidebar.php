@@ -569,6 +569,11 @@ $roleLabel = match ($role) {
                     <i class="bi bi-bar-chart"></i>
                     <span>Reports</span>
                 </a>
+                <a class="nav-link <?= navActive(["/reports/monthly_report.php"]) ?>"
+                    href="<?= e(BASE_URL) ?>/reports/monthly_report.php" data-tooltip="Monthly Report">
+                    <i class="bi bi-calendar-month"></i>
+                    <span>Monthly Report</span>
+                </a>
             <?php endif; ?>
 
             <?php if ($canModule("archived_requests")): ?>

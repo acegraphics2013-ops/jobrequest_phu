@@ -494,15 +494,26 @@ function eaCanonicalStaffDisplay(
 | Known historical aliases (normalized => canonical display).
 | Add future variants here; normalization handles new
 | period/spacing/case differences automatically.
+| Supervisor approval variants (title suffixes like "- HEPO II/III"
+| and missing middle initial "L") cannot auto-merge, so they are
+| listed explicitly to the canonical users.name.
 */
 $staffAliasDisplay = [
     eaNormStaffName("ACE R. CABUGA") => "ACE RAZ CABUGA",
     eaNormStaffName("ACE RAZ CABUGA") => "ACE RAZ CABUGA",
+    eaNormStaffName("BELL MANDREW MANLIGUEZ, RN - HEPO II") => "BELL MANDREW L. MANLIGUEZ, RN",
+    eaNormStaffName("BELL MANDREW L. MANLIGUEZ, RN") => "BELL MANDREW L. MANLIGUEZ, RN",
+    eaNormStaffName("RECKLYN D. RUAZA, RN") => "RECKLYN D. RUAZA, RN",
+    eaNormStaffName("RECKLYN D. RUAZA, RN - HEPO III") => "RECKLYN D. RUAZA, RN",
 ];
 
-/* Normalized name => user id + canonical display (active HPU users). */
+/* Normalized name => user id + canonical display (all HPU users). */
 $staffIdByNormName = [];
 $staffDisplayByNormName = [];
+/* User id => role / status / display (to list ALL HPU personnel). */
+$staffRoleById = [];
+$staffStatusById = [];
+$staffDisplayById = [];
 
 function eaRegisterStaffMaps(
     mysqli $conn,
@@ -510,10 +521,11 @@ function eaRegisterStaffMaps(
     array &$idByNorm,
     array &$displayByNorm
 ): void {
+    global $staffRoleById, $staffStatusById, $staffDisplayById;
+
     $res = $conn->query(
-        "SELECT id, name FROM users
-          WHERE role IN ('staff','supervisor','admin')
-            AND status = 'Active'"
+        "SELECT id, name, role, status FROM users
+          WHERE role IN ('staff','supervisor','admin')"
     );
 
     if (!$res) {
@@ -527,12 +539,18 @@ function eaRegisterStaffMaps(
             continue;
         }
 
+        $uid = (int)$u["id"];
         $norm = eaNormStaffName($display);
-        $idByNorm[$norm] = (int)$u["id"];
+        $idByNorm[$norm] = $uid;
 
         if (!isset($displayByNorm[$norm])) {
             $displayByNorm[$norm] = $display;
         }
+
+        /* Keep role/status so the performance table lists ALL HPU. */
+        $staffRoleById[$uid] = (string)($u["role"] ?? "");
+        $staffStatusById[$uid] = (string)($u["status"] ?? "");
+        $staffDisplayById[$uid] = $display;
     }
 
     /*
@@ -683,6 +701,86 @@ function eaResolveStaffFilter(
     );
 
     return $resolved;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Resolve any free-text person name (reviewed_by / approved_by) to a
+| staff bucket: id:* when it matches a known HPU user (via alias),
+| otherwise canon:<NORMALIZED> so variants still merge together.
+| Returns [key, id, display].
+|--------------------------------------------------------------------------
+*/
+function eaResolvePersonBucket(
+    string $rawName,
+    array $aliasMap,
+    array $idByNorm,
+    array $displayByNorm
+): array {
+    $rawName = trim($rawName);
+
+    if ($rawName === "") {
+        return ["key" => "", "id" => 0, "display" => ""];
+    }
+
+    $canonDisplay = eaCanonicalStaffDisplay($rawName, $aliasMap);
+    $canonNorm = eaNormStaffName($canonDisplay);
+    $norm = eaNormStaffName($rawName);
+
+    if (isset($idByNorm[$canonNorm])) {
+        $uid = (int)$idByNorm[$canonNorm];
+        $display = (string)($displayByNorm[$canonNorm] ?? $canonDisplay);
+
+        return ["key" => "id:" . $uid, "id" => $uid, "display" => $display];
+    }
+
+    if (isset($idByNorm[$norm])) {
+        $uid = (int)$idByNorm[$norm];
+        $display = (string)($displayByNorm[$norm] ?? $canonDisplay);
+
+        return ["key" => "id:" . $uid, "id" => $uid, "display" => $display];
+    }
+
+    return ["key" => "canon:" . $canonNorm, "id" => 0, "display" => $canonDisplay];
+}
+
+function eaEnsureStaffBucket(
+    array &$staffStats,
+    string $key,
+    string $display,
+    int $id
+): void {
+    if ($key === "" || $display === "") {
+        return;
+    }
+
+    if (!isset($staffStats[$key])) {
+        $staffStats[$key] = [
+            "name" => $display,
+            "id" => $id,
+            "handled" => 0,
+            "completed" => 0,
+            "evaluated" => 0,
+            "rating_total" => 0,
+            "rating_count" => 0,
+            "turnaround_total" => 0,
+            "turnaround_count" => 0,
+            "revisions" => 0,
+            "reviewed" => 0,
+            "approved" => 0,
+        ];
+    }
+
+    /* Backfill new counters on rows created before this upgrade. */
+    foreach (["reviewed", "approved"] as $k) {
+        if (!isset($staffStats[$key][$k])) {
+            $staffStats[$key][$k] = 0;
+        }
+    }
+
+    if ($id > 0 && ($staffStats[$key]["id"] ?? 0) === 0) {
+        $staffStats[$key]["id"] = $id;
+    }
 }
 
 /*
@@ -2176,28 +2274,7 @@ foreach ($rows as $row) {
     }
 
     if ($staffKey !== "" && $staffName !== "") {
-        if (
-            !isset(
-                $staffStats[
-                    $staffKey
-                ]
-            )
-        ) {
-            $staffStats[
-                $staffKey
-            ] = [
-                "name" => $staffName,
-                "id" => $staffId,
-                "handled" => 0,
-                "completed" => 0,
-                "evaluated" => 0,
-                "rating_total" => 0,
-                "rating_count" => 0,
-                "turnaround_total" => 0,
-                "turnaround_count" => 0,
-                "revisions" => 0
-            ];
-        }
+        eaEnsureStaffBucket($staffStats, $staffKey, $staffName, $staffId);
 
         $staffStats[
             $staffKey
@@ -2247,6 +2324,59 @@ foreach ($rows as $row) {
                 ?? 0
             );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reviewer + Approver attribution (HPU Personnel Performance)
+    |--------------------------------------------------------------------------
+    | reviewed_by = staff review action (free text, alias-merged).
+    | approved_by = supervisor/manager approval (free text, alias-merged).
+    | Both fold into the same $staffStats buckets so supervisors show
+    | their approval counts alongside handled work. A supervisor who
+    | only approves (never assigned) still appears with Approved > 0.
+    |--------------------------------------------------------------------------
+    */
+    $rawReviewer = trim((string)($row["reviewed_by"] ?? ""));
+    if ($rawReviewer !== "") {
+        $bucket = eaResolvePersonBucket(
+            $rawReviewer,
+            $staffAliasDisplay,
+            $staffIdByNormName,
+            $staffDisplayByNormName
+        );
+        if ($bucket["key"] !== "") {
+            eaEnsureStaffBucket($staffStats, $bucket["key"], $bucket["display"], $bucket["id"]);
+            $staffStats[$bucket["key"]]["reviewed"]++;
+        }
+    }
+
+    $rawApprover = trim((string)($row["approved_by"] ?? ""));
+    if ($rawApprover !== "") {
+        $bucket = eaResolvePersonBucket(
+            $rawApprover,
+            $staffAliasDisplay,
+            $staffIdByNormName,
+            $staffDisplayByNormName
+        );
+        if ($bucket["key"] !== "") {
+            eaEnsureStaffBucket($staffStats, $bucket["key"], $bucket["display"], $bucket["id"]);
+            $staffStats[$bucket["key"]]["approved"]++;
+        }
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Include ALL HPU personnel (even with zero rows in filter)
+|--------------------------------------------------------------------------
+| Supervisors who only approve and staff with no assignments in the
+| selected year must still appear so headcounts reconcile with Users.
+| Inactive HPU accounts are kept with an "Inactive" badge.
+|--------------------------------------------------------------------------
+*/
+foreach ($staffDisplayById as $hpuId => $hpuDisplay) {
+    $hpuKey = "id:" . (int)$hpuId;
+    eaEnsureStaffBucket($staffStats, $hpuKey, (string)$hpuDisplay, (int)$hpuId);
 }
 
 /*
@@ -2441,8 +2571,13 @@ unset($roleStats);
 
 foreach (
     $staffStats
-    as &$stats
+    as $sKey => &$stats
 ) {
+    foreach (["reviewed", "approved"] as $rk) {
+        if (!isset($stats[$rk])) {
+            $stats[$rk] = 0;
+        }
+    }
     $stats["average_rating"] =
         $stats["rating_count"] > 0
             ? $stats["rating_total"]
@@ -2460,19 +2595,39 @@ foreach (
             $stats["completed"],
             $stats["handled"]
         );
+
+    /* Attach role/status for display (unknown free-text keeps blank). */
+    $sid = (int)($stats["id"] ?? 0);
+    $stats["role"] = $sid > 0 ? (string)($staffRoleById[$sid] ?? "") : "";
+    $stats["status"] = $sid > 0 ? (string)($staffStatusById[$sid] ?? "") : "";
 }
 unset($stats);
 
 uasort(
     $staffStats,
-    static fn (
-        array $a,
-        array $b
-    ): int =>
-        $b["completed"]
-        <=>
-        $a["completed"]
+    static function (array $a, array $b): int {
+        $cmp = ($b["approved"] ?? 0) + ($b["completed"] ?? 0) + ($b["handled"] ?? 0)
+            <=> (($a["approved"] ?? 0) + ($a["completed"] ?? 0) + ($a["handled"] ?? 0));
+        if ($cmp !== 0) {
+            return $cmp;
+        }
+        return strcmp((string)($a["name"] ?? ""), (string)($b["name"] ?? ""));
+    }
 );
+
+/* Personnel totals for the section footer. */
+$staffTotals = [
+    "handled" => 0, "completed" => 0, "reviewed" => 0,
+    "approved" => 0, "evaluated" => 0, "revisions" => 0,
+];
+foreach ($staffStats as $st) {
+    $staffTotals["handled"] += (int)($st["handled"] ?? 0);
+    $staffTotals["completed"] += (int)($st["completed"] ?? 0);
+    $staffTotals["reviewed"] += (int)($st["reviewed"] ?? 0);
+    $staffTotals["approved"] += (int)($st["approved"] ?? 0);
+    $staffTotals["evaluated"] += (int)($st["evaluated"] ?? 0);
+    $staffTotals["revisions"] += (int)($st["revisions"] ?? 0);
+}
 
 for (
     $month = 1;
@@ -3578,12 +3733,60 @@ if (
         fputcsv($output, []);
         fputcsv(
             $output,
-            ["IEC MONTHLY CONSOLIDATION — " . $selectedYear]
+            ["HPU PERSONNEL PERFORMANCE — " . $selectedYear]
+        );
+        fputcsv(
+            $output,
+            ["Personnel", "Role", "Status", "Handled", "Reviewed", "Approved", "Completed", "Completion %", "Evaluated", "Avg Rating", "Avg Turnaround", "Revisions"]
+        );
+
+        foreach ($staffStats as $srow) {
+            fputcsv(
+                $output,
+                [
+                    $srow["name"] ?? "",
+                    $srow["role"] ?? "",
+                    $srow["status"] ?? "",
+                    $srow["handled"] ?? 0,
+                    $srow["reviewed"] ?? 0,
+                    $srow["approved"] ?? 0,
+                    $srow["completed"] ?? 0,
+                    round((float)($srow["completion_rate"] ?? 0), 1),
+                    $srow["evaluated"] ?? 0,
+                    ($srow["rating_count"] ?? 0) > 0 ? round((float)$srow["average_rating"], 2) : "",
+                    ($srow["turnaround_count"] ?? 0) > 0 ? round((float)$srow["average_turnaround"], 1) : "",
+                    $srow["revisions"] ?? 0,
+                ]
+            );
+        }
+
+        fputcsv(
+            $output,
+            [
+                "Total (" . count($staffStats) . " personnel)",
+                "", "",
+                $staffTotals["handled"],
+                $staffTotals["reviewed"],
+                $staffTotals["approved"],
+                $staffTotals["completed"],
+                "",
+                $staffTotals["evaluated"],
+                "",
+                "",
+                $staffTotals["revisions"],
+            ]
+        );
+
+        fputcsv($output, []);
+        fputcsv(
+            $output,
+            ["IEC MONTHLY CONSOLIDATION — " . $selectedYear . " (cohort = MONTH(date_request))"]
         );
         fputcsv(
             $output,
             [
                 "Month",
+                "Requests",
                 "Materials",
                 "Qty Requested",
                 "Qty Fulfilled",
@@ -3597,10 +3800,11 @@ if (
                 $output,
                 [
                     eaMonthShort((int)$iecMonth),
+                    count($iecData["requests"]),
                     count($iecData["materials"]),
                     $iecData["qty"],
                     $iecData["done"],
-                    $iecData["qty"] - $iecData["done"],
+                    max(0, (int)$iecData["qty"] - (int)$iecData["done"]),
                     round(
                         eaPercent(
                             $iecData["done"],
@@ -3616,10 +3820,11 @@ if (
             $output,
             [
                 "Total",
+                $iecDistinctRequests,
                 "",
                 $iecTotalQty,
                 $iecTotalDone,
-                $iecTotalQty - $iecTotalDone,
+                max(0, $iecTotalQty - $iecTotalDone),
                 round($iecFulfillmentRate, 1)
             ]
         );
@@ -3744,14 +3949,44 @@ if (
 
     <br>
 
+    <br>
+
     <table border="1">
         <tr>
-            <th colspan="6">
-                IEC MONTHLY CONSOLIDATION — <?= (int)$selectedYear ?>
+            <th colspan="12">HPU PERSONNEL PERFORMANCE — <?= (int)$selectedYear ?></th>
+        </tr>
+        <tr>
+            <th>Personnel</th><th>Role</th><th>Status</th><th>Handled</th><th>Reviewed</th><th>Approved</th><th>Completed</th><th>Completion %</th><th>Evaluated</th><th>Avg Rating</th><th>Avg Turnaround</th><th>Revisions</th>
+        </tr>
+        <?php foreach ($staffStats as $srow): ?>
+        <tr>
+            <td><?= e($srow["name"] ?? "") ?></td>
+            <td><?= e($srow["role"] ?? "") ?></td>
+            <td><?= e($srow["status"] ?? "") ?></td>
+            <td><?= (int)($srow["handled"] ?? 0) ?></td>
+            <td><?= (int)($srow["reviewed"] ?? 0) ?></td>
+            <td><?= (int)($srow["approved"] ?? 0) ?></td>
+            <td><?= (int)($srow["completed"] ?? 0) ?></td>
+            <td><?= number_format((float)($srow["completion_rate"] ?? 0), 1) ?></td>
+            <td><?= (int)($srow["evaluated"] ?? 0) ?></td>
+            <td><?= ($srow["rating_count"] ?? 0) > 0 ? number_format((float)$srow["average_rating"], 2) : "" ?></td>
+            <td><?= ($srow["turnaround_count"] ?? 0) > 0 ? number_format((float)$srow["average_turnaround"], 1) : "" ?></td>
+            <td><?= (int)($srow["revisions"] ?? 0) ?></td>
+        </tr>
+        <?php endforeach; ?>
+    </table>
+
+    <br>
+
+    <table border="1">
+        <tr>
+            <th colspan="7">
+                IEC MONTHLY CONSOLIDATION — <?= (int)$selectedYear ?> (cohort = MONTH(date_request))
             </th>
         </tr>
         <tr>
             <th>Month</th>
+            <th>Requests</th>
             <th>Materials</th>
             <th>Qty Requested</th>
             <th>Qty Fulfilled</th>
@@ -3762,10 +3997,11 @@ if (
         <?php foreach ($iecMonths as $iecMonth => $iecData): ?>
         <tr>
             <td><?= e(eaMonthShort((int)$iecMonth)) ?></td>
+            <td><?= count($iecData["requests"]) ?></td>
             <td><?= count($iecData["materials"]) ?></td>
             <td><?= (int)$iecData["qty"] ?></td>
             <td><?= (int)$iecData["done"] ?></td>
-            <td><?= (int)($iecData["qty"] - $iecData["done"]) ?></td>
+            <td><?= max(0, (int)$iecData["qty"] - (int)$iecData["done"]) ?></td>
             <td>
                 <?= number_format(
                     eaPercent(
@@ -3780,10 +4016,11 @@ if (
 
         <tr>
             <td><strong>Total</strong></td>
+            <td><strong><?= (int)$iecDistinctRequests ?></strong></td>
             <td></td>
             <td><strong><?= (int)$iecTotalQty ?></strong></td>
             <td><strong><?= (int)$iecTotalDone ?></strong></td>
-            <td><strong><?= (int)($iecTotalQty - $iecTotalDone) ?></strong></td>
+            <td><strong><?= max(0, (int)$iecTotalQty - (int)$iecTotalDone) ?></strong></td>
             <td><strong><?= number_format($iecFulfillmentRate, 1) ?></strong></td>
         </tr>
     </table>
@@ -5646,11 +5883,14 @@ include "../includes/sidebar.php";
         </h2>
 
         <div class="card-subtitle">
-            <?= $hasAssignedTo
-                ? "Uses the actual assigned HPU personnel as work owner. Name variants are merged (e.g. ACE R. CABUGA → ACE RAZ CABUGA), including legacy rows with no assignee."
-                : "Older database detected; reviewed_by is used as the available staff reference. Name variants are merged (e.g. ACE R. CABUGA → ACE RAZ CABUGA)."
-            ?>
+            Handled = assigned owner (assigned_to, legacy reviewed_by fallback). Reviewed = reviewed_by count. Approved = approved_by count (supervisors). Name variants merged (ACE R. CABUGA → ACE RAZ CABUGA; BELL/RECKLYN title variants → user account). All HPU accounts listed even with zero rows in <?= (int)$selectedYear ?>.
         </div>
+    </div>
+
+    <div class="card-tools">
+        <a class="btn btn-sm btn-outline-primary" href="evaluation_analytics.php?<?= e($filterQuery) ?>&amp;export=csv#personnel">
+            <i class="bi bi-filetype-csv me-1"></i> Personnel CSV
+        </a>
     </div>
 
 </div>
@@ -5666,12 +5906,15 @@ include "../includes/sidebar.php";
 
 <?php else: ?>
 
-<table class="ea-table">
+<table class="ea-table" id="personnel">
 
 <thead>
 <tr>
     <th>HPU Personnel</th>
+    <th>Role</th>
     <th class="text-end">Handled</th>
+    <th class="text-end">Reviewed</th>
+    <th class="text-end">Approved</th>
     <th class="text-end">Completed</th>
     <th class="text-end">Completion</th>
     <th class="text-end">Evaluated</th>
@@ -5684,45 +5927,76 @@ include "../includes/sidebar.php";
 <tbody>
 
 <?php foreach ($staffStats as $staffKey => $stats): ?>
+<?php
+$prole = (string)($stats["role"] ?? "");
+$pstatus = (string)($stats["status"] ?? "");
+$roleBadge = match ($prole) {
+    "supervisor" => "service-publication",
+    "staff" => "service-graphic",
+    "admin" => "service-other",
+    default => "service-other",
+};
+$roleLabel = match ($prole) {
+    "supervisor" => "Supervisor",
+    "staff" => "HPU Staff",
+    "admin" => "Admin",
+    default => "—",
+};
+?>
 
 <tr>
 
     <td class="fw-bold">
         <?= e($stats["name"] ?? $staffKey) ?>
+        <?php if ($pstatus !== "" && strtolower($pstatus) !== "active"): ?>
+            <span class="service-pill service-other" style="margin-left:4px;"><?= e($pstatus) ?></span>
+        <?php endif; ?>
+    </td>
+
+    <td>
+        <span class="service-pill <?= e($roleBadge) ?>"><?= e($roleLabel) ?></span>
     </td>
 
     <td class="text-end">
-        <?= number_format($stats["handled"]) ?>
+        <?= number_format((int)($stats["handled"] ?? 0)) ?>
     </td>
 
     <td class="text-end">
-        <?= number_format($stats["completed"]) ?>
+        <?= number_format((int)($stats["reviewed"] ?? 0)) ?>
+    </td>
+
+    <td class="text-end fw-bold <?= ((int)($stats["approved"] ?? 0) > 0) ? "text-primary" : "" ?>">
+        <?= number_format((int)($stats["approved"] ?? 0)) ?>
     </td>
 
     <td class="text-end">
-        <?= number_format($stats["completion_rate"], 1) ?>%
+        <?= number_format((int)($stats["completed"] ?? 0)) ?>
     </td>
 
     <td class="text-end">
-        <?= number_format($stats["evaluated"]) ?>
+        <?= number_format((float)($stats["completion_rate"] ?? 0), 1) ?>%
+    </td>
+
+    <td class="text-end">
+        <?= number_format((int)($stats["evaluated"] ?? 0)) ?>
     </td>
 
     <td class="text-end fw-bold">
-        <?= $stats["rating_count"] > 0
-            ? number_format($stats["average_rating"], 2) . "/5"
+        <?= ($stats["rating_count"] ?? 0) > 0
+            ? number_format((float)$stats["average_rating"], 2) . "/5"
             : "—"
         ?>
     </td>
 
     <td class="text-end">
-        <?= $stats["turnaround_count"] > 0
-            ? number_format($stats["average_turnaround"], 1) . " d"
+        <?= ($stats["turnaround_count"] ?? 0) > 0
+            ? number_format((float)$stats["average_turnaround"], 1) . " d"
             : "—"
         ?>
     </td>
 
     <td class="text-end">
-        <?= number_format($stats["revisions"]) ?>
+        <?= number_format((int)($stats["revisions"] ?? 0)) ?>
     </td>
 
 </tr>
@@ -5731,7 +6005,27 @@ include "../includes/sidebar.php";
 
 </tbody>
 
+<tfoot>
+<tr>
+    <td class="fw-bold">Total (<?= count($staffStats) ?> personnel)</td>
+    <td></td>
+    <td class="text-end fw-bold"><?= number_format((int)$staffTotals["handled"]) ?></td>
+    <td class="text-end fw-bold"><?= number_format((int)$staffTotals["reviewed"]) ?></td>
+    <td class="text-end fw-bold text-primary"><?= number_format((int)$staffTotals["approved"]) ?></td>
+    <td class="text-end fw-bold"><?= number_format((int)$staffTotals["completed"]) ?></td>
+    <td class="text-end"></td>
+    <td class="text-end fw-bold"><?= number_format((int)$staffTotals["evaluated"]) ?></td>
+    <td></td>
+    <td></td>
+    <td class="text-end fw-bold"><?= number_format((int)$staffTotals["revisions"]) ?></td>
+</tr>
+</tfoot>
+
 </table>
+
+<div class="small text-muted mt-2" style="padding:0 13px 12px;">
+    Reviewed counts every row where the person appears in <code>reviewed_by</code>; Approved counts every row where they appear in <code>approved_by</code> (both alias-merged to the user account). Handled/Completed come from the assigned-owner bucket. Totals may exceed request count because one request can involve handler + reviewer + approver.
+</div>
 
 <?php endif; ?>
 
@@ -6591,10 +6885,15 @@ arsort($trackerStatusCounts);
         </h2>
 
         <div class="card-subtitle">
-            Monthly requested vs fulfilled quantities from job requests,
-            plus library uploads, views, downloads and per-user activity.
+            Accurate monthly consolidation by request cohort (MONTH(date_request)) for <?= (int)$selectedYear ?>: distinct requests, line-item quantities, fulfilled quantities, pending (max 0) and fulfillment rate. Filters (department / staff / status / archived) apply. Plus library uploads, views, downloads and per-user activity.
             <?= $hasIecFulfilled ? "" : "Fulfillment tracking activates once the fulfilled-quantity column is installed." ?>
         </div>
+    </div>
+
+    <div class="card-tools">
+        <a class="btn btn-sm btn-outline-primary" href="evaluation_analytics.php?<?= e($filterQuery) ?>&amp;export=csv">
+            <i class="bi bi-filetype-csv me-1"></i> IEC Monthly CSV
+        </a>
     </div>
 
 </div>
@@ -6661,11 +6960,11 @@ arsort($trackerStatusCounts);
         </div>
 
         <div class="kpi-value">
-            <?= number_format($iecTotalQty - $iecTotalDone) ?>
+            <?= number_format(max(0, $iecTotalQty - $iecTotalDone)) ?>
         </div>
 
         <div class="kpi-note">
-            Requested minus fulfilled
+            Requested minus fulfilled (floored at 0) · <?= number_format($iecDistinctRequests) ?> request(s)
         </div>
 
     </article>
@@ -6732,6 +7031,15 @@ arsort($trackerStatusCounts);
 
 </section>
 
+<div class="card-body-pad">
+    <div class="chart-wrap" style="height:260px;">
+        <canvas id="iecMonthlyChart"></canvas>
+    </div>
+    <div class="small text-muted mt-2">
+        Monthly IEC consolidation for <?= (int)$selectedYear ?> — bars: qty requested vs fulfilled; line: fulfillment rate %; tooltips show distinct requests. Cohort = MONTH(date_request); pending = max(0, requested − fulfilled).
+    </div>
+</div>
+
 <div class="table-wrap">
 
 <table class="ea-table">
@@ -6739,6 +7047,7 @@ arsort($trackerStatusCounts);
 <thead>
 <tr>
     <th>Month</th>
+    <th class="text-end">Requests</th>
     <th class="text-end">Materials</th>
     <th class="text-end">Qty Requested</th>
     <th class="text-end">Qty Fulfilled</th>
@@ -6750,10 +7059,14 @@ arsort($trackerStatusCounts);
 <tbody>
 
 <?php foreach ($iecMonths as $iecMonth => $iecData): ?>
+<?php $iecPending = max(0, (int)$iecData["qty"] - (int)$iecData["done"]); ?>
 
 <tr>
     <td class="fw-bold">
         <?= e(eaMonthShort((int)$iecMonth)) ?>
+    </td>
+    <td class="text-end">
+        <?= number_format(count($iecData["requests"])) ?>
     </td>
     <td class="text-end">
         <?= number_format(count($iecData["materials"])) ?>
@@ -6765,7 +7078,7 @@ arsort($trackerStatusCounts);
         <?= number_format($iecData["done"]) ?>
     </td>
     <td class="text-end">
-        <?= number_format($iecData["qty"] - $iecData["done"]) ?>
+        <?= number_format($iecPending) ?>
     </td>
     <td class="text-end">
         <?= number_format(eaPercent($iecData["done"], $iecData["qty"]), 1) ?>%
@@ -6776,10 +7089,11 @@ arsort($trackerStatusCounts);
 
 <tr>
     <td class="fw-bold">Total</td>
+    <td class="text-end fw-bold"><?= number_format($iecDistinctRequests) ?></td>
     <td class="text-end">—</td>
     <td class="text-end fw-bold"><?= number_format($iecTotalQty) ?></td>
     <td class="text-end fw-bold"><?= number_format($iecTotalDone) ?></td>
-    <td class="text-end fw-bold"><?= number_format($iecTotalQty - $iecTotalDone) ?></td>
+    <td class="text-end fw-bold"><?= number_format(max(0, $iecTotalQty - $iecTotalDone)) ?></td>
     <td class="text-end fw-bold"><?= number_format($iecFulfillmentRate, 1) ?>%</td>
 </tr>
 
@@ -7277,6 +7591,111 @@ document.addEventListener(
                                 beginAtZero:true,
                                 ticks:{
                                     precision:0
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | IEC monthly consolidation (accurate 2026 report)
+        |--------------------------------------------------------------------------
+        */
+
+        const iecCanvas =
+            document.getElementById(
+                "iecMonthlyChart"
+            );
+
+        if (iecCanvas) {
+            new Chart(
+                iecCanvas,
+                {
+                    type:"bar",
+                    data:{
+                        labels:monthLabels,
+                        datasets:[
+                            {
+                                label:"Qty Requested",
+                                data:
+                                    <?= json_encode(array_values(array_map(static fn ($m) => (int)($iecMonths[$m]["qty"] ?? 0), range(1, 12)))) ?>,
+
+                                borderWidth:0,
+                                borderRadius:6,
+                                yAxisID:"y"
+                            },
+                            {
+                                label:"Qty Fulfilled",
+                                data:
+                                    <?= json_encode(array_values(array_map(static fn ($m) => (int)($iecMonths[$m]["done"] ?? 0), range(1, 12)))) ?>,
+
+                                borderWidth:0,
+                                borderRadius:6,
+                                yAxisID:"y"
+                            },
+                            {
+                                label:"Fulfillment Rate %",
+                                type:"line",
+                                data:
+                                    <?= json_encode(array_values(array_map(static fn ($m) => round(eaPercent((int)($iecMonths[$m]["done"] ?? 0), (int)($iecMonths[$m]["qty"] ?? 0)), 1), range(1, 12)))) ?>,
+
+                                tension:.32,
+                                borderDash:[4,4],
+                                yAxisID:"y1"
+                            }
+                        ]
+                    },
+                    options:{
+                        responsive:true,
+                        maintainAspectRatio:false,
+                        interaction:{
+                            mode:"index",
+                            intersect:false
+                        },
+                        plugins:{
+                            legend:{
+                                position:"bottom",
+                                labels:{
+                                    boxWidth:10,
+                                    font:{
+                                        size:10
+                                    }
+                                }
+                            },
+                            tooltip:{
+                                callbacks:{
+                                    footer:
+                                        (items) => {
+                                            const idx = items[0]?.dataIndex ?? 0;
+                                            const reqs =
+                                                <?= json_encode(array_values(array_map(static fn ($m) => count($iecMonths[$m]["requests"] ?? []), range(1, 12)))) ?>;
+                                            return (reqs[idx] ?? 0) + " request(s) this month";
+                                        }
+                                }
+                            }
+                        },
+                        scales:{
+                            y:{
+                                beginAtZero:true,
+                                ticks:{
+                                    precision:0
+                                }
+                            },
+                            y1:{
+                                beginAtZero:true,
+                                suggestedMax:100,
+                                max:100,
+                                position:"right",
+                                grid:{
+                                    drawOnChartArea:false
+                                },
+                                ticks:{
+                                    callback:
+                                        value =>
+                                            value + "%"
                                 }
                             }
                         }
