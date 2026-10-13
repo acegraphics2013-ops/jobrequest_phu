@@ -173,7 +173,7 @@ body{background:#f4f7fb}
 <?php include "../includes/sidebar.php"; ?>
 <div class="main flex-grow-1">
 <main class="content">
-<div class="container-fluid" style="max-width:1000px">
+<div class="container-fluid">
 
 <div class="ph">
   <div class="ph-copy">

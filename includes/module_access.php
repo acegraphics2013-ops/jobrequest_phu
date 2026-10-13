@@ -218,6 +218,7 @@ if (!function_exists('moduleSupervisorManagedModules')) {
             'calendar',
             'iec_materials',
             'evaluation_analytics',
+            'monthly_report',
             'archived_requests',
             'ward_health_education',
             'whe_overview',

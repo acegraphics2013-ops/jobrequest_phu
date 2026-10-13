@@ -98,6 +98,11 @@ if (!function_exists('moduleRegistry')) {
                 'section' => 'Reports',
                 'roles' => ['staff', 'supervisor', 'admin'],
             ],
+            'monthly_report' => [
+                'label' => 'Monthly Report',
+                'section' => 'Reports',
+                'roles' => ['staff', 'supervisor', 'admin'],
+            ],
             'archived_requests' => [
                 'label' => 'Archived Requests',
                 'section' => 'Reports',

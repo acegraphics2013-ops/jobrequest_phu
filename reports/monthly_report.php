@@ -24,7 +24,7 @@ requireRole([
     "supervisor",
     "admin"
 ]);
-requireModule($conn, "evaluation_analytics");
+requireModule($conn, "monthly_report");
 
 mysqli_report(
     MYSQLI_REPORT_ERROR |

@@ -145,167 +145,143 @@ unset($_SESSION["module_perm_flash"]);
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link rel="stylesheet" href="<?= e(BASE_URL) ?>/assets/css/style.css">
 <link rel="stylesheet" href="<?= e(BASE_URL) ?>/assets/css/page_headers.css">
+<!-- Simple tech stack: plain Bootstrap 5.3 + Icons + minimal CSS + vanilla JS (no build, no framework). -->
 <style>
 :root {
-    --mp-bg: #f8fafc;
-    --mp-card-bg: #ffffff;
+    --mp-bg: #f1f5f9;
     --mp-border: #e2e8f0;
-    --mp-primary: #2563eb;
-    --mp-success: #059669;
-    --mp-danger: #dc2626;
-    --mp-radius: 16px;
-    --mp-shadow: 0 4px 14px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
-    --mp-shadow-lg: 0 12px 28px -4px rgba(15, 23, 42, 0.09), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+    --mp-radius: 12px;
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
 }
-
-body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-system, sans-serif; }
-.content { padding: 22px; }
-
+body { background: var(--mp-bg); font-size: 13px; }
+.content { padding: var(--sp-3); }
+.container-fluid { width: 100%; max-width: 100% !important; margin: 0; padding-left: var(--sp-3); padding-right: var(--sp-3); }
+.ph { margin-bottom: var(--sp-3); }
+.ph-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.mp-card + .mp-card { margin-top: var(--sp-3); }
+.ph-title { font-size: 1.05rem !important; }
+.ph-subtitle { font-size: 0.75rem !important; }
+.ph-icon { width: 32px !important; height: 32px !important; font-size: 1rem !important; }
 .mp-card {
     border: 1px solid var(--mp-border);
     border-radius: var(--mp-radius);
-    background: var(--mp-card-bg);
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: var(--mp-shadow);
-    transition: all 0.2s ease;
+    background: #fff;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
-
 .mp-user-sticky {
     position: sticky;
-    top: 14px;
-    z-index: 95;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(226, 232, 240, 0.95);
-    box-shadow: var(--mp-shadow-lg);
+    top: 8px;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 }
-
 .mp-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: #ffffff;
-    font-weight: 800;
-    font-size: 1.15rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-    flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 8px; font-size: 0.85rem;
+    background: #2563eb; color: #fff; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-
+.module-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+.module-grid > .perm-row {
+    margin-bottom: 0;
+    height: 100%;
+}
+.module-grid > .perm-row:only-child {
+    grid-column: 1 / -1;
+}
 .perm-row {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 14px 18px;
-    border-radius: 12px;
-    border: 1px solid #f1f5f9;
-    background: #fafafa;
-    margin-bottom: 10px;
-    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 12px; border: 1px solid var(--mp-border); border-radius: 10px;
+    background: #f8fafc; margin-bottom: 0; font-size: 12.5px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
-
 .perm-row:hover {
-    background: #ffffff;
     border-color: #cbd5e1;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
-
-.perm-row.is-effective-visible {
-    border-left: 4px solid var(--mp-success);
-}
-.perm-row.is-effective-hidden {
-    border-left: 4px solid #cbd5e1;
-}
-
+.perm-row.is-effective-visible { border-left: 4px solid #059669; background: #fff; }
+.perm-row.is-effective-hidden { border-left: 4px solid #cbd5e1; }
 .badge-role-allow { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-.badge-role-deny  { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
-
+.badge-role-deny { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
 .badge-override-allow { background: #dcfce7; color: #15803d; border: 1px solid #86efac; font-weight: 700; }
-.badge-override-deny  { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; font-weight: 700; }
-
-.badge-effective-visible { background: #10b981; color: #ffffff; font-weight: 700; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25); }
-.badge-effective-hidden  { background: #94a3b8; color: #ffffff; font-weight: 650; }
-
-.perm-btn-group .btn-check + .btn {
-    border-radius: 8px;
-    font-size: 0.78rem;
-    font-weight: 650;
-    padding: 5px 12px;
-    transition: all 0.15s ease;
+.badge-override-deny { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; font-weight: 700; }
+.badge-effective-visible { background: #059669; color: #fff; font-weight: 700; }
+.badge-effective-hidden { background: #94a3b8; color: #fff; }
+.sec-title { font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.sec-title .fs-5 { font-size: 0.95rem !important; }
+.section-quick .btn { font-size: 0.65rem; padding: 2px 10px; border-radius: 999px; }
+.perm-row.is-dirty { border-color: #f59e0b; background: #fffbeb; }
+.save-access-btn { min-width: 110px; font-size: 0.75rem; padding: 4px 10px; }
+.save-dirty-count { font-weight: 800; }
+.module-label-text { font-size: 12.5px; }
+.perm-row .badge { font-size: 0.62rem; padding: 2px 6px; }
+.perm-btn-group { flex-shrink: 0; }
+.perm-btn-group .btn { font-size: 0.68rem !important; padding: 2px 8px !important; }
+.form-label { font-size: 0.65rem !important; margin-bottom: 2px !important; }
+.form-control, .form-select { font-size: 0.78rem !important; padding: 4px 8px !important; }
+.form-control-sm { font-size: 0.72rem !important; }
+.btn { font-size: 0.75rem; }
+.btn-sm { font-size: 0.7rem; padding: 3px 8px; }
+.alert { font-size: 0.75rem; padding: 8px 12px; margin-bottom: 10px !important; }
+h5.fw-bold { font-size: 0.85rem; }
+.small, small { font-size: 0.7rem; }
+/* ---- Spacing rhythm: one consistent vertical scale ---- */
+.ph, .mp-card, .module-section-card { margin-bottom: var(--sp-3); }
+.module-section-card:last-of-type { margin-bottom: var(--sp-3); }
+.sec-title { margin-bottom: var(--sp-2); }
+.perm-row .mt-2 { margin-top: var(--sp-2) !important; }
+/* ---- Responsive: mobile-first stacking, desktop breathing room ---- */
+@media (max-width: 576px) {
+    .content { padding: var(--sp-2); }
+    .container-fluid { padding-left: var(--sp-2); padding-right: var(--sp-2); }
+    .mp-card { padding: var(--sp-2); border-radius: 10px; }
+    .ph { flex-direction: column; align-items: stretch !important; gap: var(--sp-2); }
+    .ph-actions { width: 100%; }
+    .ph-actions .btn { flex: 1 1 auto; }
+    .perm-row { flex-direction: column; align-items: stretch; gap: var(--sp-2); }
+    .perm-btn-group { display: flex; width: 100%; }
+    .perm-btn-group .btn { flex: 1 1 0; text-align: center; }
+    .mp-user-sticky { top: 6px; }
+    .mp-user-sticky .save-access-btn { width: 100%; }
+    .mp-user-sticky .position-relative, .mp-user-sticky #moduleFilter { width: 100% !important; }
+    .btn-group.btn-group-sm { width: 100%; }
+    .btn-group.btn-group-sm .btn { flex: 1 1 0; }
 }
-
-.perm-btn-group .btn-check:checked + .btn-outline-secondary {
-    background: #475467 !important;
-    color: #ffffff !important;
-    border-color: #475467 !important;
-    box-shadow: 0 2px 6px rgba(71, 84, 103, 0.25);
+@media (min-width: 992px) {
+    .content { padding: 18px 24px; }
+    .container-fluid { padding-left: 0; padding-right: 0; }
+    .mp-card { padding: 14px 18px; }
+    .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 }
-
-.perm-btn-group .btn-check:checked + .btn-outline-success {
-    background: #059669 !important;
-    color: #ffffff !important;
-    border-color: #059669 !important;
-    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+@media (min-width: 1600px) {
+    .content { padding: 22px 32px; }
+    .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 }
-
-.perm-btn-group .btn-check:checked + .btn-outline-danger {
-    background: #dc2626 !important;
-    color: #ffffff !important;
-    border-color: #dc2626 !important;
-    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
 }
-
-.sec-title {
-    font-size: 0.95rem;
-    font-weight: 750;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-}
-
-.section-quick .btn {
-    font-size: 0.68rem;
-    font-weight: 700;
-    padding: 2px 10px;
-    border-radius: 999px;
-}
-
-.perm-row.is-dirty {
-    border-color: #f59e0b;
-    background: #fffbeb;
-}
-
-.perm-row.is-dirty::after {
-    content: "Unsaved";
-    position: absolute;
-    top: -9px;
-    right: 12px;
-    padding: 0 8px;
-    border-radius: 999px;
-    background: #f59e0b;
-    color: #ffffff;
-    font-size: 0.6rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.save-access-btn {
-    min-width: 150px;
-}
-
-.save-dirty-count {
-    font-weight: 800;
-}
+/* ---- UX: focus, steps, chips, feedback ---- */
+:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 6px; }
+.mp-steps { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 0.7rem; color: #64748b; flex-wrap: wrap; }
+.mp-step { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border: 1px solid var(--mp-border); border-radius: 999px; background: #fff; }
+.mp-step.is-active { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; font-weight: 700; }
+.mp-step.is-done { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+.mp-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.mp-chips a { font-size: 0.68rem; padding: 2px 9px; border: 1px solid var(--mp-border); border-radius: 999px; background: #fff; color: #334155; text-decoration: none; }
+.mp-chips a:hover { border-color: #2563eb; color: #1d4ed8; }
+#moduleFilterCount { font-size: 0.65rem; color: #64748b; white-space: nowrap; }
+.btn.is-saving { pointer-events: none; opacity: 0.75; }
 </style>
 </head>
 <body class="app-shell">
@@ -313,7 +289,7 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
 <?php include "../includes/sidebar.php"; ?>
 <div class="main flex-grow-1">
 <main class="content">
-<div class="container-fluid" style="max-width:1120px">
+<div class="container-fluid">
 
 <div class="ph">
   <div class="ph-copy">
@@ -321,7 +297,7 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
     <div>
       <p class="ph-eyebrow">Administration</p>
       <h1 class="ph-title">Module Access Permissions</h1>
-      <p class="ph-subtitle">Configure module visibility per user. <strong>Allow</strong> grants additional modules, <strong>Deny</strong> revokes access, and <strong>Inherit</strong> uses role defaults.</p>
+      <p class="ph-subtitle">Configure module visibility per user. <strong>Allow</strong> grants, <strong>Deny</strong> revokes, <strong>Inherit</strong> uses role defaults. New: <strong>Monthly Report</strong> (Reports) can be granted per user.</p>
     </div>
   </div>
   <div class="ph-actions">
@@ -329,8 +305,16 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
   </div>
 </div>
 
+<div class="mp-steps" aria-label="Progress">
+  <span class="mp-step <?= $targetUser ? "is-done" : "is-active" ?>"><i class="bi bi-person"></i>1. Pick user</span>
+  <span aria-hidden="true">→</span>
+  <span class="mp-step <?= $targetUser ? "is-active" : "" ?>"><i class="bi bi-sliders"></i>2. Review access</span>
+  <span aria-hidden="true">→</span>
+  <span class="mp-step"><i class="bi bi-check2-circle"></i>3. Save</span>
+</div>
+
 <?php if ($flash): ?>
-<div class="alert alert-<?= e($flash["type"]) ?> alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4">
+<div class="alert alert-<?= e($flash["type"]) ?> alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4" role="alert">
   <i class="bi bi-info-circle me-2"></i><?= e($flash["message"]) ?>
   <button class="btn-close" type="button" data-bs-dismiss="alert"></button>
 </div>
@@ -346,7 +330,7 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
 
 <!-- User Selection Form Card -->
 <div class="mp-card">
-  <form method="get" class="row g-3 align-items-end" id="userPickerForm">
+  <form method="get" class="row g-2 g-md-3 align-items-end" id="userPickerForm">
     <div class="col-md-5">
       <label class="form-label fw-bold small text-muted text-uppercase mb-1">Search User</label>
       <div class="input-group">
@@ -384,8 +368,8 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
 <input type="hidden" name="user_id" value="<?= (int) $targetUser["id"] ?>">
 
 <!-- Sticky User Header & Control Bar -->
-<div class="mp-card mp-user-sticky d-flex justify-content-between align-items-center flex-wrap gap-3">
-  <div class="d-flex align-items-center gap-3">
+<div class="mp-card mp-user-sticky d-flex justify-content-between align-items-center flex-wrap gap-2 gap-md-3">
+  <div class="d-flex align-items-center gap-2 gap-md-3">
     <div class="mp-avatar"><?= e($userInitials) ?></div>
     <div>
       <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -398,7 +382,7 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
       <div class="small text-muted mt-1">
         <i class="bi bi-envelope me-1"></i><?= e($targetUser["email"]) ?>
         <span class="ms-2">|</span>
-        <span class="ms-2 fw-semibold text-dark"><i class="bi bi-shield-check me-1 text-success"></i><span id="visibleGauge"><?= $visibleModules ?></span> / <?= $totalModules ?> Modules Visible</span>
+        <span class="ms-2 fw-semibold text-dark" aria-live="polite"><i class="bi bi-shield-check me-1 text-success"></i><span id="visibleGauge"><?= $visibleModules ?></span> / <?= $totalModules ?> Modules Visible</span>
       </div>
     </div>
   </div>
@@ -418,8 +402,10 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
     </div>
 
     <!-- Live Filter Input -->
-    <div class="position-relative">
-      <input type="text" id="moduleFilter" class="form-control form-control-sm border-secondary-subtle" style="width:170px;" placeholder="Search module...">
+    <div class="position-relative d-flex align-items-center gap-1">
+      <input type="text" id="moduleFilter" class="form-control form-control-sm border-secondary-subtle" style="width:170px;" placeholder="Search module...  ( / )" aria-label="Search modules" autocomplete="off">
+      <button type="button" id="moduleFilterClear" class="btn btn-sm btn-outline-secondary d-none" aria-label="Clear module search" title="Clear search"><i class="bi bi-x"></i></button>
+      <span id="moduleFilterCount" class="d-none d-md-inline" aria-live="polite"></span>
     </div>
 
     <button class="btn btn-primary fw-bold save-access-btn" type="submit">
@@ -427,6 +413,15 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
     </button>
   </div>
 </div>
+
+<!-- Section jump links -->
+<?php if ($targetUser): ?>
+<nav class="mp-chips no-print" aria-label="Jump to section">
+  <?php foreach (array_keys($grouped) as $chipSection): ?>
+  <a href="#sec-<?= e(preg_replace('/[^a-z0-9]+/i', '-', strtolower($chipSection))) ?>"><?= e($chipSection) ?></a>
+  <?php endforeach; ?>
+</nav>
+<?php endif; ?>
 
 <!-- Category Sections -->
 <?php foreach ($grouped as $section => $mods): ?>
@@ -444,17 +439,18 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
   ];
   $iconClass = $secIcons[$section] ?? "bi-folder2-open";
 ?>
-<div class="mp-card module-section-card">
+<div class="mp-card module-section-card" id="sec-<?= e(preg_replace('/[^a-z0-9]+/i', '-', strtolower($section))) ?>">
   <div class="sec-title">
     <i class="bi <?= $iconClass ?> text-primary fs-5"></i>
     <span><?= e($section) ?></span>
+    <span class="badge bg-light text-muted border rounded-pill small fw-normal"><?= count($mods) ?> modules</span>
     <span class="ms-auto d-inline-flex gap-1 section-quick">
       <button type="button" class="btn btn-sm btn-outline-success" data-section-allow title="Set all visible modules in this section to Allow">Allow all</button>
       <button type="button" class="btn btn-sm btn-outline-secondary" data-section-inherit title="Reset this section to role defaults">Reset</button>
     </span>
-    <span class="badge bg-light text-muted border rounded-pill small fw-normal"><?= count($mods) ?> modules</span>
   </div>
 
+  <div class="module-grid">
   <?php foreach ($mods as [$key, $meta]): ?>
     <?php
       $defaultAllowed = in_array($targetUser["role"], $meta["roles"], true);
@@ -467,7 +463,7 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
     ?>
     <div class="perm-row <?= $effectiveVisible ? "is-effective-visible" : "is-effective-hidden" ?> <?= $mode !== "inherit" ? "is-overridden-" . $mode : "" ?>" data-module-key="<?= e($key) ?>" data-role-default="<?= $defaultAllowed ? "1" : "0" ?>" data-initial="<?= e($mode) ?>">
       <div class="flex-grow-1 min-w-0">
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
           <span class="fw-bold text-dark module-label-text"><?= e($meta["label"]) ?></span>
           <span class="badge bg-light text-muted border font-monospace small px-2 py-0.5"><?= e($key) ?></span>
         </div>
@@ -484,6 +480,9 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
             Effective: <span class="effective-text"><?= $effectiveVisible ? "Visible" : "Hidden" ?></span>
           </span>
         </div>
+        <?php if ($isSelfLocked): ?>
+        <div class="small text-warning-emphasis mt-1"><i class="bi bi-lock-fill me-1 text-warning"></i>Locked for your own account to prevent lockout.</div>
+        <?php endif; ?>
       </div>
 
       <div class="btn-group perm-btn-group" role="group" aria-label="<?= e($key) ?>">
@@ -497,10 +496,8 @@ body { background: var(--mp-bg); color: #0f172a; font-family: system-ui, -apple-
         <label class="btn btn-sm btn-outline-danger" for="perm-<?= e($key) ?>-deny">Deny</label>
       </div>
     </div>
-    <?php if ($isSelfLocked): ?>
-    <div class="small text-muted mb-2 ps-2"><i class="bi bi-lock-fill me-1 text-warning"></i>Locked for your own account to prevent lockout.</div>
-    <?php endif; ?>
   <?php endforeach; ?>
+  </div>
 </div>
 <?php endforeach; ?>
 
@@ -541,23 +538,45 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Module Live Search & Section Hiding Filter
+    // Module Live Search & Section Hiding Filter (+ count, clear, "/" shortcut)
     const moduleFilter = document.getElementById("moduleFilter");
-    if (moduleFilter) {
-        moduleFilter.addEventListener("input", function () {
-            const q = (this.value || "").toLowerCase().trim();
-            document.querySelectorAll(".module-section-card").forEach(function (card) {
-                let matchCount = 0;
-                card.querySelectorAll(".perm-row").forEach(function (row) {
-                    const text = row.textContent.toLowerCase();
-                    const isMatch = text.includes(q);
-                    row.style.display = isMatch ? "" : "none";
-                    if (isMatch) matchCount++;
-                });
-                card.style.display = matchCount > 0 ? "" : "none";
+    const moduleFilterClear = document.getElementById("moduleFilterClear");
+    const moduleFilterCount = document.getElementById("moduleFilterCount");
+    function applyModuleFilter() {
+        const q = ((moduleFilter && moduleFilter.value) || "").toLowerCase().trim();
+        let total = 0, shown = 0;
+        document.querySelectorAll(".module-section-card").forEach(function (card) {
+            let matchCount = 0;
+            card.querySelectorAll(".perm-row").forEach(function (row) {
+                total++;
+                const text = row.textContent.toLowerCase();
+                const isMatch = text.includes(q);
+                row.style.display = isMatch ? "" : "none";
+                if (isMatch) { matchCount++; shown++; }
             });
+            card.style.display = matchCount > 0 ? "" : "none";
+        });
+        if (moduleFilterClear) moduleFilterClear.classList.toggle("d-none", q === "");
+        if (moduleFilterCount) moduleFilterCount.textContent = q === "" ? "" : shown + " of " + total + " shown";
+    }
+    if (moduleFilter) {
+        moduleFilter.addEventListener("input", applyModuleFilter);
+        applyModuleFilter();
+    }
+    if (moduleFilterClear && moduleFilter) {
+        moduleFilterClear.addEventListener("click", function () {
+            moduleFilter.value = "";
+            applyModuleFilter();
+            moduleFilter.focus();
         });
     }
+    document.addEventListener("keydown", function (ev) {
+        if (ev.key === "/" && moduleFilter && document.activeElement !== moduleFilter
+            && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement && document.activeElement.tagName) || "")) {
+            ev.preventDefault();
+            moduleFilter.focus();
+        }
+    });
 
     // Dynamic State & Gauge Update
     function updateRowState(row) {
@@ -725,11 +744,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Warn on accidental navigation with unsaved changes (not on save)
+    // + disable save buttons with feedback to prevent double-submit
     let formSubmitting = false;
     const permissionsForm = document.getElementById("permissionsForm");
     if (permissionsForm) {
         permissionsForm.addEventListener("submit", function () {
             formSubmitting = true;
+            document.querySelectorAll(".save-access-btn").forEach(function (btn) {
+                btn.classList.add("is-saving");
+                btn.disabled = true;
+                if (!btn.dataset.orig) btn.dataset.orig = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Saving…';
+            });
         });
     }
     window.addEventListener("beforeunload", function (event) {

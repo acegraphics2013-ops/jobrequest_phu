@@ -559,6 +559,7 @@ $roleLabel = match ($role) {
         <!-- REPORTS -->
         <?php if (
             $canModule("evaluation_analytics") ||
+            $canModule("monthly_report") ||
             $canModule("archived_requests")
         ): ?>
             <div class="sidebar-section-heading">REPORTS</div>
@@ -569,6 +570,8 @@ $roleLabel = match ($role) {
                     <i class="bi bi-bar-chart"></i>
                     <span>Reports</span>
                 </a>
+            <?php endif; ?>
+            <?php if ($canModule("monthly_report")): ?>
                 <a class="nav-link <?= navActive(["/reports/monthly_report.php"]) ?>"
                     href="<?= e(BASE_URL) ?>/reports/monthly_report.php" data-tooltip="Monthly Report">
                     <i class="bi bi-calendar-month"></i>
