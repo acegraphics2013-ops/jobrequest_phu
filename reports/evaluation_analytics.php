@@ -46,6 +46,23 @@ $isManager = in_array(
 
 /*
 |--------------------------------------------------------------------------
+| Legacy completion bypass (report-only)
+|--------------------------------------------------------------------------
+| Requests dated before October 2026 could not be walked through the
+| review/approval workflow one by one. Reports treat them as reviewed,
+| approved and completed, except Cancelled rows. October 2026 onward is
+| left untouched so current workflow data stays authoritative.
+| Missing reviewer/approver credit goes to the default supervisor.
+| No database rows are modified by this mode.
+|--------------------------------------------------------------------------
+*/
+
+const EA_LEGACY_BYPASS_ENABLED = true;
+const EA_LEGACY_BYPASS_CUTOFF = "2026-10-01";
+const EA_LEGACY_BYPASS_SUPERVISOR = "BELL MANDREW L. MANLIGUEZ, RN";
+
+/*
+|--------------------------------------------------------------------------
 | Helpers
 |--------------------------------------------------------------------------
 */
@@ -218,6 +235,236 @@ function eaEvaluationDate(
         ?: eaValidDateOrNull(
             $row["date_request"] ?? null
         );
+}
+
+/*
+|--------------------------------------------------------------------------
+| Legacy completion bypass helpers
+|--------------------------------------------------------------------------
+| Report-only inference: nothing here writes to the database.
+|--------------------------------------------------------------------------
+*/
+
+function eaLegacyBypassApplies(
+    array $row
+): bool {
+    if (!EA_LEGACY_BYPASS_ENABLED) {
+        return false;
+    }
+
+    $date = eaValidDateOrNull(
+        $row["date_request"] ?? null
+    );
+
+    return
+        $date !== null
+        &&
+        $date < EA_LEGACY_BYPASS_CUTOFF;
+}
+
+function eaEffectiveStatus(
+    array $row
+): string {
+    $raw = trim(
+        (string)(
+            $row["approval_status"]
+            ?? ""
+        )
+    );
+
+    if (!eaLegacyBypassApplies($row)) {
+        return $raw;
+    }
+
+    return strcasecmp($raw, "Cancelled") === 0
+        ? $raw
+        : "Completed";
+}
+
+function eaEffectiveReviewedBy(
+    array $row
+): string {
+    $raw = trim(
+        (string)(
+            $row["reviewed_by"]
+            ?? ""
+        )
+    );
+
+    if ($raw !== "") {
+        return $raw;
+    }
+
+    return eaLegacyBypassApplies($row)
+        ? EA_LEGACY_BYPASS_SUPERVISOR
+        : "";
+}
+
+function eaEffectiveApprovedBy(
+    array $row
+): string {
+    $raw = trim(
+        (string)(
+            $row["approved_by"]
+            ?? ""
+        )
+    );
+
+    if ($raw !== "") {
+        return $raw;
+    }
+
+    return eaLegacyBypassApplies($row)
+        ? EA_LEGACY_BYPASS_SUPERVISOR
+        : "";
+}
+
+function eaEffectiveIsCompleted(
+    array $row
+): bool {
+    return in_array(
+        eaEffectiveStatus($row),
+        [
+            "Completed",
+            "For Evaluation",
+            "Closed"
+        ],
+        true
+    );
+}
+
+function eaEffectiveCompletionBucketDate(
+    array $row
+): ?string {
+    $actual = eaActualCompletion($row);
+
+    if ($actual !== null) {
+        return $actual;
+    }
+
+    // Inferred legacy completions have no actual completion date, so
+    // bucket them by request month to keep monthly totals reconciled.
+    if (
+        eaEffectiveIsCompleted($row)
+        &&
+        eaLegacyBypassApplies($row)
+    ) {
+        return eaValidDateOrNull(
+            $row["date_request"] ?? null
+        );
+    }
+
+    return null;
+}
+
+function eaEffectiveOwner(
+    array $row
+): string {
+    $assigned = trim(
+        (string)(
+            $row["assigned_name"]
+            ?? ""
+        )
+    );
+
+    if ($assigned !== "") {
+        return $assigned;
+    }
+
+    return eaEffectiveReviewedBy($row);
+}
+
+function eaLegacyRowFlags(
+    array $row
+): array {
+    $applies = eaLegacyBypassApplies($row);
+
+    $rawStatus = trim(
+        (string)(
+            $row["approval_status"]
+            ?? ""
+        )
+    );
+
+    $reviewerRaw = trim(
+        (string)(
+            $row["reviewed_by"]
+            ?? ""
+        )
+    );
+
+    $approverRaw = trim(
+        (string)(
+            $row["approved_by"]
+            ?? ""
+        )
+    );
+
+    $statusForced =
+        $applies
+        &&
+        strcasecmp($rawStatus, "Cancelled") !== 0
+        &&
+        !in_array(
+            $rawStatus,
+            [
+                "Completed",
+                "For Evaluation",
+                "Closed"
+            ],
+            true
+        );
+
+    return [
+        "eligible" => $applies,
+        "reviewer_inferred" =>
+            $applies
+            &&
+            $reviewerRaw === "",
+        "approver_inferred" =>
+            $applies
+            &&
+            $approverRaw === "",
+        "status_forced" => $statusForced,
+        "any" =>
+            $statusForced
+            ||
+            (
+                $applies
+                &&
+                (
+                    $reviewerRaw === ""
+                    ||
+                    $approverRaw === ""
+                )
+            )
+    ];
+}
+
+function eaEffectiveRow(
+    array $row
+): array {
+    $status = eaEffectiveStatus($row);
+
+    return [
+        "status" => $status,
+        "reviewed_by" =>
+            eaEffectiveReviewedBy($row),
+        "approved_by" =>
+            eaEffectiveApprovedBy($row),
+        "is_completed" => in_array(
+            $status,
+            [
+                "Completed",
+                "For Evaluation",
+                "Closed"
+            ],
+            true
+        ),
+        "completion_bucket" =>
+            eaEffectiveCompletionBucketDate($row),
+        "flags" => eaLegacyRowFlags($row)
+    ];
 }
 
 function eaPercent(
@@ -1395,6 +1642,17 @@ function eaLoadRows(
         $year
     ];
 
+    /*
+    | Effective-status SQL mirror of the legacy completion bypass.
+    | Eligible rows are reported as Completed unless Cancelled.
+    */
+    $legacyForcedSql = EA_LEGACY_BYPASS_ENABLED
+        ? "(
+            jr.date_request < '" . EA_LEGACY_BYPASS_CUTOFF . "'
+            AND jr.approval_status <> 'Cancelled'
+        )"
+        : "(1 = 0)";
+
     // Accuracy: include archived history by default.
     // Only narrow when user explicitly picks active/archived.
     if ($hasArchived && $archivedFilter === "active") {
@@ -1637,10 +1895,13 @@ function eaLoadRows(
 
     if ($evaluationFilter === "pending") {
         $sql .= "
-            AND jr.approval_status IN (
-                'Completed',
-                'For Evaluation',
-                'Closed'
+            AND (
+                jr.approval_status IN (
+                    'Completed',
+                    'For Evaluation',
+                    'Closed'
+                )
+                OR {$legacyForcedSql}
             )
         ";
 
@@ -1677,9 +1938,19 @@ function eaLoadRows(
     }
 
     if ($statusFilter !== "") {
-        $sql .= "
-            AND jr.approval_status = ?
-        ";
+        if ($statusFilter === "Completed") {
+            $sql .= "
+                AND (
+                    jr.approval_status = ?
+                    OR {$legacyForcedSql}
+                )
+            ";
+        } else {
+            $sql .= "
+                AND jr.approval_status = ?
+                AND NOT {$legacyForcedSql}
+            ";
+        }
 
         $types .= "s";
         $params[] =
@@ -1784,6 +2055,11 @@ $turnaroundAnomaly = 0;
 $archivedIncluded = 0;
 $crossYearCompletions = 0;
 $crossYearEvaluations = 0;
+$legacyEligibleRows = 0;
+$legacyReviewerInferred = 0;
+$legacyApproverInferred = 0;
+$legacyStatusForced = 0;
+$legacyMonthFallback = 0;
 
 $clientSurveyCount = 0;
 $clientCriteria = [
@@ -1893,16 +2169,27 @@ $lowRatingRows = [];
 $feedbackRows = [];
 
 foreach ($rows as $row) {
-    $status = (string)(
-        $row["approval_status"]
-        ?? ""
-    );
+    $effective = eaEffectiveRow($row);
 
-    $isCompleted = in_array(
-        $status,
-        $completedStatuses,
-        true
-    );
+    $status = $effective["status"];
+
+    $isCompleted = $effective["is_completed"];
+
+    if ($effective["flags"]["eligible"]) {
+        $legacyEligibleRows++;
+    }
+
+    if ($effective["flags"]["reviewer_inferred"]) {
+        $legacyReviewerInferred++;
+    }
+
+    if ($effective["flags"]["approver_inferred"]) {
+        $legacyApproverInferred++;
+    }
+
+    if ($effective["flags"]["status_forced"]) {
+        $legacyStatusForced++;
+    }
 
     if ($isCompleted) {
         $completedRequests++;
@@ -2078,15 +2365,21 @@ foreach ($rows as $row) {
     if (
         $isCompleted
         &&
-        $actualCompletion !== null
+        $effective["completion_bucket"] !== null
     ) {
+        $completionBucket = (string)$effective["completion_bucket"];
+
+        if ($actualCompletion === null) {
+            $legacyMonthFallback++;
+        }
+
         $compYear = (int)date(
             "Y",
-            strtotime($actualCompletion)
+            strtotime($completionBucket)
         );
         $month = (int)date(
             "n",
-            strtotime($actualCompletion)
+            strtotime($completionBucket)
         );
 
         if (
@@ -2230,12 +2523,7 @@ foreach ($rows as $row) {
 
         $staffKey = "id:" . $staffId;
     } else {
-        $rawReviewer = trim(
-            (string)(
-                $row["reviewed_by"]
-                ?? ""
-            )
-        );
+        $rawReviewer = (string)$effective["reviewed_by"];
 
         if ($rawReviewer !== "") {
             $normReviewer = eaNormStaffName($rawReviewer);
@@ -2336,7 +2624,7 @@ foreach ($rows as $row) {
     | only approves (never assigned) still appears with Approved > 0.
     |--------------------------------------------------------------------------
     */
-    $rawReviewer = trim((string)($row["reviewed_by"] ?? ""));
+    $rawReviewer = (string)$effective["reviewed_by"];
     if ($rawReviewer !== "") {
         $bucket = eaResolvePersonBucket(
             $rawReviewer,
@@ -2350,7 +2638,7 @@ foreach ($rows as $row) {
         }
     }
 
-    $rawApprover = trim((string)($row["approved_by"] ?? ""));
+    $rawApprover = (string)$effective["approved_by"];
     if ($rawApprover !== "") {
         $bucket = eaResolvePersonBucket(
             $rawApprover,
@@ -2707,20 +2995,9 @@ function eaYearSummary(
     $clientOutcome = 0;
 
     foreach ($records as $row) {
-        $status = (string)(
-            $row["approval_status"]
-            ?? ""
-        );
+        $effective = eaEffectiveRow($row);
 
-        $isCompleted = in_array(
-            $status,
-            [
-                "Completed",
-                "For Evaluation",
-                "Closed"
-            ],
-            true
-        );
+        $isCompleted = $effective["is_completed"];
 
         if ($isCompleted) {
             $completed++;
@@ -3618,28 +3895,18 @@ if (
                 "Approver",
                 "Date Requested",
                 "Initial Draft Date",
-                "Created At"
+                "Created At",
+                "Raw Status",
+                "Legacy Backfill"
             ]
         );
 
         foreach ($rows as $row) {
+            $effective = eaEffectiveRow($row);
+
             $actualCompletion = eaActualCompletion($row);
 
-            $owner =
-                trim(
-                    (string)(
-                        $row["assigned_name"]
-                        ?? ""
-                    )
-                );
-
-            if ($owner === "") {
-                $owner =
-                    (string)(
-                        $row["reviewed_by"]
-                        ?? ""
-                    );
-            }
+            $owner = eaEffectiveOwner($row);
 
             $rating =
                 eaCombinedRating(
@@ -3659,7 +3926,7 @@ if (
                             ?? null
                         )
                     ),
-                    $row["approval_status"],
+                    $effective["status"],
                     $owner,
                     $rating ?: "",
                     eaRatingLabel($rating),
@@ -3686,16 +3953,17 @@ if (
                         ?? "",
                     $row["priority"]
                         ?? "",
-                    $row["reviewed_by"]
-                        ?? "",
-                    $row["approved_by"]
-                        ?? "",
+                    $effective["reviewed_by"],
+                    $effective["approved_by"],
                     $row["date_request"]
                         ?? "",
                     $row["initial_draft_date"]
                         ?? "",
                     $row["created_at"]
-                        ?? ""
+                        ?? "",
+                    $row["approval_status"]
+                        ?? "",
+                    $effective["flags"]["any"] ? "Yes" : "No"
                 ]
             );
         }
@@ -3870,27 +4138,17 @@ if (
             <th>Target Date</th>
             <th>Initial Draft Date</th>
             <th>Created At</th>
+            <th>Raw Status</th>
+            <th>Legacy Backfill</th>
         </tr>
 
         <?php foreach ($rows as $row): ?>
             <?php
+            $effective = eaEffectiveRow($row);
+
             $actualCompletion = eaActualCompletion($row);
 
-            $owner =
-                trim(
-                    (string)(
-                        $row["assigned_name"]
-                        ?? ""
-                    )
-                );
-
-            if ($owner === "") {
-                $owner =
-                    (string)(
-                        $row["reviewed_by"]
-                        ?? ""
-                    );
-            }
+            $owner = eaEffectiveOwner($row);
 
             $rating =
                 eaCombinedRating(
@@ -3913,7 +4171,7 @@ if (
                         )
                     ) ?>
                 </td>
-                <td><?= e($row["approval_status"]) ?></td>
+                <td><?= e($effective["status"]) ?></td>
                 <td><?= e($owner) ?></td>
                 <td><?= $rating ?: "" ?></td>
                 <td><?= e($row["outcome_assessment"] ?? "") ?></td>
@@ -3936,12 +4194,14 @@ if (
                 <td><?= e($requestorRoleLabels[eaRequestorRoleKey($row)] ?? "") ?></td>
                 <td><?= e($row["contact"] ?? "") ?></td>
                 <td><?= e($row["priority"] ?? "") ?></td>
-                <td><?= e($row["reviewed_by"] ?? "") ?></td>
-                <td><?= e($row["approved_by"] ?? "") ?></td>
+                <td><?= e($effective["reviewed_by"]) ?></td>
+                <td><?= e($effective["approved_by"]) ?></td>
                 <td><?= e($row["date_request"] ?? "") ?></td>
                 <td><?= e($row["date_completion"] ?? "") ?></td>
                 <td><?= e($row["initial_draft_date"] ?? "") ?></td>
                 <td><?= e($row["created_at"] ?? "") ?></td>
+                <td><?= e($row["approval_status"] ?? "") ?></td>
+                <td><?= $effective["flags"]["any"] ? "Yes" : "No" ?></td>
             </tr>
 
         <?php endforeach; ?>
@@ -4544,6 +4804,19 @@ body {
     color:#0e7090;
 }
 
+.legacy-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    padding:2px 6px;
+    border-radius:999px;
+    background:#eef2ff;
+    color:#4338ca;
+    font-size:.52rem;
+    font-weight:850;
+    white-space:nowrap;
+}
+
 /* Tracker */
 .card-tools {
     display:flex;
@@ -4827,6 +5100,24 @@ include "../includes/sidebar.php";
     This page will continue using the legacy Job Request evaluation fields.
     Import <code>assets/job_request_client_experience.sql</code>
     to activate the full Client Experience Scorecard.
+</div>
+
+<?php endif; ?>
+
+<?php if (EA_LEGACY_BYPASS_ENABLED && $legacyEligibleRows > 0): ?>
+
+<div class="alert alert-info small">
+    <i class="bi bi-clock-history me-1"></i>
+    <strong>Legacy completion mode:</strong>
+    <?= number_format($legacyEligibleRows) ?> request(s) dated before
+    <?= e(EA_LEGACY_BYPASS_CUTOFF) ?> are reported as reviewed, approved and
+    completed even when those workflow fields were not entered one by one.
+    Missing reviewer/approver credit is assigned to
+    <?= e(EA_LEGACY_BYPASS_SUPERVISOR) ?>.
+    Cancelled records remain excluded from completion, October–November 2026
+    data is untouched, monthly completion uses the request month when no
+    actual final date exists, and average turnaround still uses actual
+    final-approval dates only.
 </div>
 
 <?php endif; ?>
@@ -5225,6 +5516,9 @@ include "../includes/sidebar.php";
 
         <div class="kpi-note">
             <?= number_format($totalRequests) ?> request(s) in current filter
+            <?php if ($legacyEligibleRows > 0): ?>
+                · <?= number_format($legacyEligibleRows) ?> legacy backfilled
+            <?php endif; ?>
         </div>
 
     </article>
@@ -5455,11 +5749,20 @@ include "../includes/sidebar.php";
 
 </section>
 
-<?php if ($orphanSurveys > 0 || $turnaroundMissing > 0 || $crossYearCompletions > 0 || $turnaroundAnomaly > 0): ?>
+<?php if ($orphanSurveys > 0 || $turnaroundMissing > 0 || $crossYearCompletions > 0 || $turnaroundAnomaly > 0 || $legacyEligibleRows > 0): ?>
 
 <div class="alert alert-light border small mt-3 mb-0">
     <i class="bi bi-shield-check me-1"></i>
     <strong>Data accuracy notes (<?= (int)$selectedYear ?>):</strong>
+    <?php if ($legacyEligibleRows > 0): ?>
+        Legacy completion mode applied to <?= number_format($legacyEligibleRows) ?> request(s) before
+        <?= e(EA_LEGACY_BYPASS_CUTOFF) ?> — <?= number_format($legacyReviewerInferred) ?> reviewer(s) and
+        <?= number_format($legacyApproverInferred) ?> approver(s) inferred as <?= e(EA_LEGACY_BYPASS_SUPERVISOR) ?>,
+        <?= number_format($legacyStatusForced) ?> status(es) forced to Completed (Cancelled excluded).
+        <?php if ($legacyMonthFallback > 0): ?>
+            <?= number_format($legacyMonthFallback) ?> completion(s) bucketed by request month because no actual final date exists.
+        <?php endif; ?>
+    <?php endif; ?>
     <?php if ($archivedFilter !== "all" && $archivedTotalYear > 0): ?>
         Archive scope “<?= e($archivedFilter) ?>” active — <?= number_format($archivedTotalYear) ?> archived request(s) exist in <?= (int)$selectedYear ?>
         (<?= number_format($archivedEvaluatedYear) ?> with evaluations). Switch to “All” for complete history.
